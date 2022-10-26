@@ -1,0 +1,4 @@
+velmap_filename=./data/velocity_maps/ngc3258_covel_c4.fits
+fluxmap_filename=./data/flux_maps/ngc3258_coflux_c4.fits
+x0=150
+y0=150
