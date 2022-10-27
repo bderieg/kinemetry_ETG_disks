@@ -15,6 +15,18 @@ import plotting_scripts as plotter
 
 import sys
 
+###########################
+# Define global constants #
+###########################
+default_params = {  # If None, then no default exists--user must define in parameter file
+        'velmap_filename' : None,
+        'fluxmap_filename' : None,
+        'x0' : 0,
+        'y0' : 0,
+        'rangeq' : [0.2, 1.0],
+        'rangepa' : [-90, 90]
+    }
+
 #######################################
 # Define parameter file read function #
 #######################################
@@ -25,23 +37,24 @@ def read_properties(filename):
     Keyword arguments:
         filename -- the name of the file to be read
     """
-    result={ }
-    with open(filename, "r") as csvfile:
+    result = {}
+    with open(filename, "r") as csvfile:  # Open file as read-only
+        # Define file-read object
         reader = csv.reader(csvfile, delimiter='=', escapechar='\\', quoting=csv.QUOTE_NONE)
+
+        # Iterate through rows in file
         for row in reader:
-            if len(row) == 0:
+            row = [i.replace(" ","") for i in row]
+            if len(row) == 0:  # If blank row
                 continue
-            elif len(row) != 2:
+            elif len(row) != 2:  # If row doesn't make sense
                 raise csv.Error("Too many fields on row with contents: "+str(row))
-            try:
-                row[1] = int(row[1])
+            try:  # Convert data types except for strings
+                row[1] = eval(row[1])
             except:
                 pass
-            if row[1] == "True":
-                row[1] = True
-            elif row[1] == "False":
-                row[1] = False
-            result[row[0]] = row[1]
+            result[row[0].lower()] = row[1]  # Assign row to dictionary
+
     return result
 
 
@@ -58,19 +71,64 @@ else:
 # Read file
 params = read_properties(param_filename)
 
+###################################################
+# Fill params with default values if not explicit #
+###################################################
+
+for key in default_params:
+    if key not in params:
+        if default_params[key] is None:
+            raise Exception("Mandatory argument not specified in parameter file: " + key)
+        params[key] = default_params[key]
+
 ###################
 # Import map data #
 ###################
 
+# Import image from fits
 velmap = fits.open(params['velmap_filename'])[0].data
+
+# None-ify empty pixels
+for row in range(len(velmap)):
+    for col in range(len(velmap[row])):
+        if velmap[row][col] == 0.0:
+            velmap[row][col] = None
+
+# Convert to 1D arrays
+ny,nx = velmap.shape
+x = (np.arange(0,nx))
+y = (np.arange(0,ny))
+xx, yy = np.meshgrid(x, y)
+xbin_nan = xx.ravel()
+ybin_nan = yy.ravel()
+velbin_nan = velmap.ravel()
+
+# Make new lists sans nan values
+xbin = []
+ybin = []
+velbin = []
+for itr in range(len(velbin_nan)):
+    if velbin_nan[itr] == velbin_nan[itr]:
+        xbin.append(xbin_nan[itr])
+        ybin.append(ybin_nan[itr])
+        velbin.append(velbin_nan[itr])
+
+# Convert to arrays
+xbin = np.asarray(xbin)
+ybin = np.asarray(ybin)
+velbin = np.asarray(velbin)
+
 
 ##############################
 # Do the main kinemetry task #
 ##############################
 
-k = kin.kinemetry(img=velmap, x0=params['x0'], y0=params['y0'])
+k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin,
+        x0=params['x0'], y0=params['y0'],
+        rangeQ=params['rangeq'], rangePA=params['rangepa']
+        )
 
 fig1 = plotter.plot_kinemetry_profiles(k)
-# fig2 = plotter.plot_vlos_maps(xbin, ybin, velbin, k, sigma=False)
+fig2 = plotter.plot_vlos_maps(xbin, ybin, velbin, k)
 plt.show()
 
