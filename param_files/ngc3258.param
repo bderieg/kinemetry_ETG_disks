@@ -4,3 +4,4 @@ x0=150
 y0=150
 rangeq=[0.2,1.0]
 rangepa=[45,90]
+plot=False

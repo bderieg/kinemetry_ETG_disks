@@ -21,8 +21,16 @@ import sys
 default_params = {  # If None, then no default exists--user must define in parameter file
         'velmap_filename' : None,
         'fluxmap_filename' : None,
+        'ntrm' : 6,
+        'scale' : 1,
         'x0' : 0,
         'y0' : 0,
+        'fixcen' : True,
+        'nrad' : 100,
+        'allterms' : False,
+        'even' : False,
+        'cover' : 1,
+        'plot' : True,
         'rangeq' : [0.2, 1.0],
         'rangepa' : [-90, 90]
     }
@@ -51,22 +59,19 @@ def read_properties(filename):
                 raise csv.Error("Too many fields on row with contents: "+str(row))
             try:  # Convert data types except for strings
                 row[1] = eval(row[1])
-            except:
+            except SyntaxError:
                 pass
             result[row[0].lower()] = row[1]  # Assign row to dictionary
 
     return result
-
 
 ##################################
 # Attempt to read parameter file #
 ##################################
 
 # Get parameter file name from command line argument
-if len(sys.argv) == 2:
-    param_filename = sys.argv[1]
-else:
-    raise Exception("Incorrect number of arguments (should be 1--parameter file name)")
+assert len(sys.argv) == 2, "Incorrect number of arguments (should be 1--parameter file name)"
+param_filename = sys.argv[1]
 
 # Read file
 params = read_properties(param_filename)
@@ -77,22 +82,30 @@ params = read_properties(param_filename)
 
 for key in default_params:
     if key not in params:
-        if default_params[key] is None:
-            raise Exception("Mandatory argument not specified in parameter file: " + key)
+        assert default_params[key] is not None, "Mandatory argument not specified in parameter file: " + key
         params[key] = default_params[key]
 
 ###################
 # Import map data #
 ###################
 
-# Import image from fits
+# Import images from fits
 velmap = fits.open(params['velmap_filename'])[0].data
+fluxmap = fits.open(params['fluxmap_filename'])[0].data
 
 # None-ify empty pixels
 for row in range(len(velmap)):
     for col in range(len(velmap[row])):
         if velmap[row][col] == 0.0:
             velmap[row][col] = None
+
+# None-ify unreliable pixels
+maxflux = np.asarray(fluxmap).max()
+for row in range(len(fluxmap)):
+    for col in range(len(fluxmap[row])):
+        if fluxmap[row][col] < 0.29*maxflux:
+            velmap[row][col] = None
+            fluxmap[row][col] = None
 
 # Convert to 1D arrays
 ny,nx = velmap.shape
@@ -118,17 +131,19 @@ xbin = np.asarray(xbin)
 ybin = np.asarray(ybin)
 velbin = np.asarray(velbin)
 
-
 ##############################
 # Do the main kinemetry task #
 ##############################
 
 k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin,
         x0=params['x0'], y0=params['y0'],
-        rangeQ=params['rangeq'], rangePA=params['rangepa']
+        rangeQ=params['rangeq'], rangePA=params['rangepa'],
+        ntrm=params['ntrm'], scale=params['scale'],
+        fixcen=params['fixcen'], nrad=params['nrad'],
+        allterms=params['allterms'], even=params['even'],
+        cover=params['cover'], plot=params['plot']
         )
 
 fig1 = plotter.plot_kinemetry_profiles(k)
 fig2 = plotter.plot_vlos_maps(xbin, ybin, velbin, k)
 plt.show()
-
