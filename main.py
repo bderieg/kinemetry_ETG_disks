@@ -98,6 +98,7 @@ for row in range(len(velmap)):
     for col in range(len(velmap[row])):
         if velmap[row][col] == 0.0:
             velmap[row][col] = None
+            fluxmap[row][col] = None
 
 # None-ify unreliable pixels
 maxflux = np.asarray(fluxmap).max()
@@ -115,21 +116,25 @@ xx, yy = np.meshgrid(x, y)
 xbin_nan = xx.ravel()
 ybin_nan = yy.ravel()
 velbin_nan = velmap.ravel()
+fluxbin_nan = fluxmap.ravel()
 
 # Make new lists sans nan values
 xbin = []
 ybin = []
 velbin = []
+fluxbin = []
 for itr in range(len(velbin_nan)):
     if velbin_nan[itr] == velbin_nan[itr]:
         xbin.append(xbin_nan[itr])
         ybin.append(ybin_nan[itr])
         velbin.append(velbin_nan[itr])
+        fluxbin.append(fluxbin_nan[itr])
 
 # Convert to arrays
 xbin = np.asarray(xbin)
 ybin = np.asarray(ybin)
 velbin = np.asarray(velbin)
+fluxbin = np.asarray(fluxbin)
 
 ##############################
 # Do the main kinemetry task #
@@ -144,6 +149,8 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin,
         cover=params['cover'], plot=params['plot']
         )
 
-fig1 = plotter.plot_kinemetry_profiles(k)
-fig2 = plotter.plot_vlos_maps(xbin, ybin, velbin, k)
+plotter.plot_kinemetry_profiles(k)
+plotter.plot_vlos_maps(xbin, ybin, velbin, k)
+plotter.plot_flux_vel(fluxbin, velbin)
+# plotter.plot_pvd(fluxbin, velbin, xbin, ybin)
 plt.show()

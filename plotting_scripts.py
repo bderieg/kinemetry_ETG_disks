@@ -3,6 +3,7 @@
 ######################################################################################################
 
 import numpy as np
+import math
 import matplotlib.pyplot as plt
 from plotbin.plot_velfield import plot_velfield
 
@@ -241,6 +242,76 @@ def plot_kinemetry_profiles(k):
     fig.suptitle('Kinemetry')
     
     return fig
+
+def plot_flux_vel(fluxbin, velbin):
+    # Take just integer velocities for discrete binning
+    binning = 20
+    velbin = [round(i/binning)*binning for i in velbin]
+
+    # Define histogram values
+    bins = {}
+    for velitr in range(len(velbin)):
+        if velbin[velitr] not in bins:
+            bins[velbin[velitr]] = 0
+        bins[velbin[velitr]] += fluxbin[velitr]
+    vels = []
+    fluxes = []
+    for key in bins:
+        vels.append(key)
+        fluxes.append(bins[key])
+
+    # Set up figure architecture
+    fig = plt.figure()
+    gs = fig.add_gridspec(1)
+
+    # Plot histogram
+    ax1 = fig.add_subplot(gs[0])
+    ax1.set_xlabel('velocity (km s$^{-1}$)')
+    ax1.set_ylabel('flux (mJy)')
+    ax1.set_xlim([2000, 3500])
+    ax1.set_ylim([-0.1, 2.0])
+    ax1.bar(vels, fluxes, facecolor='black', linewidth=0, width=binning)
+
+def plot_pvd(fluxbin, velbin, xbin, ybin):
+    # Set constants
+    velbounds = [-500, 500]
+    disbounds = [-100, 100]
+    vsys = np.median(velbin)
+    x0 = 150
+    y0 = 150
+
+    # Create distance bin
+    distancebin = [np.sqrt((xbin[xindex]-x0)**2+(ybin[xindex]-y0)**2) for xindex in range(len(xbin))]
+    for vidx in range(len(velbin)):
+        if velbin[vidx]-vsys < 0:
+            distancebin[vidx] = -distancebin[vidx]
+
+    # Make ints
+    velbin = [round(i) for i in velbin]
+    distancebin = [round(i) for i in distancebin]
+
+    # Make empty image
+    pvd = []
+    rowitr = 0
+    for row in range(velbounds[0], velbounds[1]):
+        pvd.append([])
+        for col in range(disbounds[0], disbounds[1]):
+           pvd[rowitr].append(0)
+        rowitr += 1
+
+    # Fill image
+    for itr in range(len(velbin)):
+        rowidx = int(velbin[itr]-vsys-velbounds[0])
+        colidx = int(distancebin[itr]-disbounds[0])
+        pvd[rowidx][colidx] = fluxbin[itr]
+
+    # Set up figure architecture
+    fig = plt.figure()
+    gs = fig.add_gridspec(1)
+
+    # Plot histogram
+    ax1 = fig.add_subplot(gs[0])
+    ax1.imshow(pvd, aspect='0.2', cmap='binary')
 
 def plot_vlos_maps(xbin, ybin, velbin, k, sigma=False):
     # Get some values for plotting
