@@ -32,7 +32,9 @@ default_params = {  # If None, then no default exists--user must define in param
         'cover' : 1,
         'plot' : True,
         'rangeq' : [0.2, 1.0],
-        'rangepa' : [-90, 90]
+        'rangepa' : [-90, 90],
+        'saveloc' : 'none',
+        'objname' : 'noname'
     }
 
 #######################################
@@ -150,7 +152,13 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin,
         )
 
 plotter.plot_kinemetry_profiles(k)
+if params['saveloc'] != 'none':
+    plt.savefig(params['saveloc']+params['objname']+'_radial_profiles.png', dpi=1000)
 plotter.plot_vlos_maps(xbin, ybin, velbin, k)
+if params['saveloc'] != 'none':
+    plt.savefig(params['saveloc']+params['objname']+'_velocity_maps.png', dpi=1000)
 plotter.plot_flux_vel(fluxbin, velbin)
-# plotter.plot_pvd(fluxbin, velbin, xbin, ybin)
-plt.show()
+if params['saveloc'] != 'none':
+    plt.savefig(params['saveloc']+params['objname']+'_flux_velocity_hist.png', dpi=1000)
+else:
+    plt.show()

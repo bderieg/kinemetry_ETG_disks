@@ -5,3 +5,5 @@ y0=150
 rangeq=[0.2,1.0]
 rangepa=[45,90]
 plot=False
+saveloc='./'
+objname='ngc3258'
