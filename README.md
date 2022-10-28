@@ -20,6 +20,8 @@ and the following optional keys
 - plot
 - rangeq
 - rangepa
+- saveloc
+- objname
 
 See the existing parameter files as examples.
 
