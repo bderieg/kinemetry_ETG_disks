@@ -33,8 +33,11 @@ default_params = {  # If None, then no default exists--user must define in param
         'plot' : True,
         'rangeq' : [0.2, 1.0],
         'rangepa' : [-90, 90],
+        'flux_cutoff' : 0.0,
         'saveloc' : 'none',
-        'objname' : 'noname'
+        'objname' : 'noname',
+        'verbose' : False,
+        'ring' : 0.0
     }
 
 #######################################
@@ -58,7 +61,7 @@ def read_properties(filename):
             if len(row) == 0:  # If blank row
                 continue
             elif len(row) != 2:  # If row doesn't make sense
-                raise csv.Error("Too many fields on row with contents: "+str(row))
+                raise csv.Error("Parameter file syntax error on line "+str(row))
             try:  # Convert data types except for strings
                 row[1] = eval(row[1])
             except SyntaxError:
@@ -103,12 +106,20 @@ for row in range(len(velmap)):
             fluxmap[row][col] = None
 
 # None-ify unreliable pixels
-maxflux = np.asarray(fluxmap).max()
 for row in range(len(fluxmap)):
     for col in range(len(fluxmap[row])):
-        if fluxmap[row][col] < 0.29*maxflux:
+        if fluxmap[row][col] < params['flux_cutoff']:
             velmap[row][col] = None
             fluxmap[row][col] = None
+
+# Make mask image
+value_mask = fluxmap.copy()
+for row in range(len(fluxmap)):
+    for col in range(len(fluxmap[row])):
+        if fluxmap[row][col] > 0:
+            value_mask[row][col] = 0
+        else:
+            value_mask[row][col] = 1
 
 # Convert to 1D arrays
 ny,nx = velmap.shape
@@ -148,17 +159,25 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin,
         ntrm=params['ntrm'], scale=params['scale'],
         fixcen=params['fixcen'], nrad=params['nrad'],
         allterms=params['allterms'], even=params['even'],
-        cover=params['cover'], plot=params['plot']
+        cover=params['cover'], plot=params['plot'],
+        ring=params['ring']/params['scale'], verbose=params['verbose']
         )
 
-plotter.plot_kinemetry_profiles(k)
+# Plot radial profiles
+plotter.plot_kinemetry_profiles(k, params['scale'])
 if params['saveloc'] != 'none':
     plt.savefig(params['saveloc']+params['objname']+'_radial_profiles.png', dpi=1000)
-plotter.plot_vlos_maps(xbin, ybin, velbin, k)
+
+# Plot v_los maps
+plotter.plot_vlos_maps(xbin, ybin, velbin, k, value_mask=value_mask)
 if params['saveloc'] != 'none':
     plt.savefig(params['saveloc']+params['objname']+'_velocity_maps.png', dpi=1000)
+
+# Plot flux versus velocity histogram
 plotter.plot_flux_vel(fluxbin, velbin)
 if params['saveloc'] != 'none':
     plt.savefig(params['saveloc']+params['objname']+'_flux_velocity_hist.png', dpi=1000)
+
+# If not saving figures, just show
 else:
     plt.show()

@@ -7,7 +7,7 @@ The user should create his/her own parameter files for each target. Parameter fi
 - velmap_filename
 - fluxmap_filename
 
-and the following optional keys
+and the following optional kinemetry parameters (see documentation there)
 - ntrm
 - scale
 - x0
@@ -20,8 +20,16 @@ and the following optional keys
 - plot
 - rangeq
 - rangepa
-- saveloc
-- objname
+- ring
+- verbose
+
+and the following other optional parameters
+- flux_cutoff
+    - Velocity values that spatially correspond to flux values below this level will be thrown out before running kinemetry
+- obj_name
+    - A string with the object name; used for file naming if 'save_loc' is set
+- save_loc
+    - A string containing a file save location
 
 See the existing parameter files as examples.
 

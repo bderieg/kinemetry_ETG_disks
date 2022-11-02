@@ -1,9 +1,14 @@
-velmap_filename=./data/velocity_maps/ngc3258_covel_c4.fits
-fluxmap_filename=./data/flux_maps/ngc3258_coflux_c4.fits
+velmap_filename=./data/ngc3258/ngc3258_covel_c4.fits
+fluxmap_filename=./data/ngc3258/ngc3258_coflux_c4.fits
 x0=150
 y0=150
-rangeq=[0.2,1.0]
+rangeq=[0.5,1.0]
 rangepa=[45,90]
+scale=0.015
 plot=False
+flux_cutoff=0.0015
 saveloc='./'
 objname='ngc3258'
+verbose=True
+ring=0.1
+cover=.5
