@@ -14,6 +14,9 @@ import kinemetry_scripts.kinemetry as kin
 import plotting_scripts as plotter
 
 import sys
+import warnings
+import logging
+# warnings.filterwarnings(action='ignore', category=UserWarning)  # Comment to allow warnings
 
 ###########################
 # Define global constants #
@@ -37,7 +40,9 @@ default_params = {  # If None, then no default exists--user must define in param
         'saveloc' : 'none',
         'objname' : 'noname',
         'verbose' : False,
-        'ring' : 0.0
+        'ring' : 0.0,
+        'saveplots' : False,
+        'savedata' : False
     }
 
 #######################################
@@ -117,7 +122,7 @@ value_mask = fluxmap.copy()
 for row in range(len(fluxmap)):
     for col in range(len(fluxmap[row])):
         if fluxmap[row][col] > 0:
-            value_mask[row][col] = 0
+            value_mask[row][col] = 1e-5
         else:
             value_mask[row][col] = 1
 
@@ -164,20 +169,23 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin,
         )
 
 # Plot radial profiles
-plotter.plot_kinemetry_profiles(k, params['scale'])
-if params['saveloc'] != 'none':
+radial_data = plotter.plot_kinemetry_profiles(k, params['scale'])
+if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_radial_profiles.png', dpi=1000)
 
 # Plot v_los maps
-plotter.plot_vlos_maps(xbin, ybin, velbin, k, value_mask=value_mask)
-if params['saveloc'] != 'none':
+spatial_data = plotter.plot_vlos_maps(xbin, ybin, velbin, k, value_mask=value_mask)
+if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_velocity_maps.png', dpi=1000)
 
-# Plot flux versus velocity histogram
-plotter.plot_flux_vel(fluxbin, velbin)
-if params['saveloc'] != 'none':
-    plt.savefig(params['saveloc']+params['objname']+'_flux_velocity_hist.png', dpi=1000)
-
 # If not saving figures, just show
-else:
+if not params['saveloc']:
     plt.show()
+
+if params['saveloc'] and not (params['saveplots'] or params['savedata']):
+    logging.warning('Save location set but nothing to save! Did you mean to set \'saveplots\' or \'savedata\'?')
+
+# Save data
+if params['savedata']:
+    radial_data.to_csv(params['saveloc']+params['objname']+'_radial_data.csv', index=True)
+    spatial_data.to_csv(params['saveloc']+params['objname']+'_spatial_data.csv', index=False)

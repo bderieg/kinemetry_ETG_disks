@@ -6,6 +6,7 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 from plotbin.plot_velfield import plot_velfield
+import pandas as pd
 
 from matplotlib.patches import Ellipse
 
@@ -15,11 +16,19 @@ from matplotlib import gridspec
 import matplotlib as mpl
 mpl.rcParams['xtick.direction'] = 'in'
 mpl.rcParams['ytick.direction'] = 'in'
+mpl.rcParams['xtick.top'] = True
+mpl.rcParams['ytick.right'] = True
+mpl.rcParams['xtick.labelsize'] = 'small'
+mpl.rcParams['ytick.labelsize'] = 'small'
+mpl.rcParams['axes.labelpad'] = 10
 
 ##############################################################
 # Function to plot radial profiles based on kinemetry output #
 #   Parameters:                                              #
 #       k: the output kinemetry object                       #
+#   Returns:                                                 #
+#       data = pandas dataframe with nicely organized        #
+#           kinemetry outputs                                #
 ##############################################################
 
 def plot_kinemetry_profiles(k, scale):
@@ -42,33 +51,61 @@ def plot_kinemetry_profiles(k, scale):
     ax = gs.subplots(sharex=True)
 
     # Plot pa
-    # ax[0].errorbar(radii, pa, yerr=er_pa, fmt='.k')
-    ax[0].plot(radii, pa, '.k')
-    ax[0].set_ylabel('$\Gamma$ (deg)')
+    # ax[0].errorbar(radii, pa, yerr=er_pa, fmt='k', linewidth=1, elinewidth=1, ecolor='#00000045')
+    lo_bar = list(map(lambda x,y:x-y, pa, er_pa))
+    up_bar = list(map(lambda x,y:x+y, pa, er_pa))
+    ax[0].fill_between(radii, lo_bar, up_bar, color='#00000045', linewidth=0)
+    ax[0].plot(radii, pa, linewidth=1, color='#000000ff')
+    ax[0].set_ylabel('$\Gamma$ (deg)', rotation='horizontal', ha='right')
     ax[0].set_box_aspect(0.5)
     ax[0].set_xlim(left=0)
+    ax[0].yaxis.tick_right()
 
     # Plot q
-    # ax[1].errorbar(radii, q, yerr=er_q, fmt='.k')
-    ax[1].plot(radii, q, '.k')
-    ax[1].set_ylabel('$q$')
+    lo_bar = list(map(lambda x,y:x-y, q, er_q))
+    up_bar = list(map(lambda x,y:x+y, q, er_q))
+    ax[1].fill_between(radii, lo_bar, up_bar, color='#00000045', linewidth=0)
+    ax[1].plot(radii, q, linewidth=1, color='#000000ff')
+    ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
     ax[1].set_box_aspect(0.5)
+    ax[1].yaxis.set_label_position('right')
 
     # Plot k1
-    # ax[2].errorbar(radii, k1, yerr=list(map(lambda x,y:x*y,er_k1,k1)), fmt='.k')
-    ax[2].plot(radii, k1, '.k')
-    ax[2].set_ylabel('$k_1$ (km s$^{-1}$)')
+    lo_bar = list(map(lambda x,y:x-y, k1, list(map(lambda x,y:x*y,er_k1,k1))))
+    up_bar = list(map(lambda x,y:x+y, k1, list(map(lambda x,y:x*y,er_k1,k1))))
+    ax[2].fill_between(radii, lo_bar, up_bar, color='#00000045', linewidth=0)
+    ax[2].plot(radii, k1, linewidth=1, color='#000000ff')
+    ax[2].set_ylabel('$k_1$ (km s$^{-1}$)', rotation='horizontal', ha='right')
     ax[2].set_box_aspect(0.5)
+    ax[2].yaxis.tick_right()
 
     # Plot k5k1
-    # ax[3].errorbar(radii, k5k1, yerr=list(map(lambda x,y:x*y,er_k5k1,k5k1)), fmt='.k')
-    ax[3].plot(radii, k5k1, '.k')
+    lo_bar = list(map(lambda x,y:x-y, k5k1, list(map(lambda x,y:x*y,er_k5k1,k5k1))))
+    up_bar = list(map(lambda x,y:x+y, k5k1, list(map(lambda x,y:x*y,er_k5k1,k5k1))))
+    ax[3].fill_between(radii, lo_bar, up_bar, color='#00000045', linewidth=0)
+    ax[3].plot(radii, k5k1, linewidth=1, color='#000000ff')
     ax[3].set_xlabel('Radius (arcsec)')
-    ax[3].set_ylabel('$k_5/k_1$')
+    ax[3].set_ylabel('$k_5/k_1$', rotation='horizontal', ha='left')
     ax[3].set_box_aspect(0.5)
+    ax[3].yaxis.set_label_position('right')
 
     # Set title
     fig.suptitle('Kinemetry')
+
+    fig.tight_layout()
+
+    # Fill data and return
+    data = pd.DataFrame(
+                {
+                    'pa' : pa,
+                    'q' : q,
+                    'k1' : k1,
+                    'k5k1' : k5k1
+                }
+            )
+    data.index = radii
+    data.index.name = 'radius'
+    return data
 
 #######################################################
 # Function to plot maps for v_los (moment 1) -- plots #
@@ -78,6 +115,9 @@ def plot_kinemetry_profiles(k, scale):
 #       k: kinemetry output object                    #
 #       value_mask: an array of 1s and 0s, where all  #
 #           1s will be masked                         #
+#   Returns:                                          #
+#       data = pandas dataframe with nicely organized #
+#           bin values                                #
 #######################################################
 
 def plot_vlos_maps(xbin, ybin, velbin, k, value_mask=None):
@@ -124,6 +164,18 @@ def plot_vlos_maps(xbin, ybin, velbin, k, value_mask=None):
 
     # Set title
     fig.suptitle('$v_{LOS}$', fontsize=15)
+
+    # Fill data and return
+    data = pd.DataFrame(
+                {
+                    'xbin' : xbin,
+                    'ybin' : ybin,
+                    'velbin' : velbin,
+                    'velcirc' : k.velcirc,
+                    'residuals' : list(map(lambda x,y:x-y, k.velcirc, velbin))
+                }
+            )
+    return data
 
 ####################################################################
 # Function to plot maps for surface brightness (moment 0) -- plots #
