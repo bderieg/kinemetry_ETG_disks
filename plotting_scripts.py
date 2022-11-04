@@ -33,6 +33,8 @@ mpl.rcParams['axes.labelpad'] = 10
 
 def plot_kinemetry_profiles(k, scale):
     # Retrieve relevant kinemetry outputs
+    k0 = k.cf[:,0]
+    er_k0 = k.er_cf[:,0]
     radii = k.rad[:]*scale
     pa = k.pa[:]
     er_pa = k.er_pa[:]
@@ -47,7 +49,7 @@ def plot_kinemetry_profiles(k, scale):
 
     # Set up figure architecture
     fig = plt.figure()
-    gs = fig.add_gridspec(4, hspace=0)
+    gs = fig.add_gridspec(5, hspace=0)
     ax = gs.subplots(sharex=True)
 
     # Plot pa
@@ -89,6 +91,15 @@ def plot_kinemetry_profiles(k, scale):
     ax[3].set_box_aspect(0.5)
     ax[3].yaxis.set_label_position('right')
 
+    # Plot v_sys 
+    lo_bar = list(map(lambda x,y:x-y, k0, er_k0))
+    up_bar = list(map(lambda x,y:x+y, k0, er_k0))
+    ax[4].fill_between(radii, lo_bar, up_bar, color='#00000045', linewidth=0)
+    ax[4].plot(radii, k0, linewidth=1, color='#000000ff')
+    ax[4].set_ylabel('$v_{sys}$ (km s$^{-1}$)', rotation='horizontal', ha='right')
+    ax[4].set_box_aspect(0.5)
+    ax[4].yaxis.tick_right()
+
     # Set title
     fig.suptitle('Kinemetry')
 
@@ -98,9 +109,15 @@ def plot_kinemetry_profiles(k, scale):
     data = pd.DataFrame(
                 {
                     'pa' : pa,
+                    'er_pa' : er_pa,
                     'q' : q,
+                    'er_q' : er_q,
                     'k1' : k1,
-                    'k5k1' : k5k1
+                    'er_k1' : er_k1,
+                    'k5k1' : k5k1,
+                    'er_k5k1' : er_k5k1,
+                    'k0' : k0,
+                    'er_k0' : er_k0
                 }
             )
     data.index = radii

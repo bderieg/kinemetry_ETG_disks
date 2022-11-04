@@ -36,6 +36,7 @@ default_params = {  # If None, then no default exists--user must define in param
         'plot' : True,
         'rangeq' : [0.2, 1.0],
         'rangepa' : [-90, 90],
+        'vsys' : 0,
         'flux_cutoff' : 0.0,
         'saveloc' : 'none',
         'objname' : 'noname',
@@ -94,6 +95,8 @@ for key in default_params:
     if key not in params:
         assert default_params[key] is not None, "Mandatory argument not specified in parameter file: " + key
         params[key] = default_params[key]
+if params['vsys'] == 0:
+    params['vsys'] = None
 
 ###################
 # Import map data #
@@ -165,6 +168,7 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin,
         fixcen=params['fixcen'], nrad=params['nrad'],
         allterms=params['allterms'], even=params['even'],
         cover=params['cover'], plot=params['plot'],
+        vsys=params['vsys'],
         ring=params['ring']/params['scale'], verbose=params['verbose']
         )
 

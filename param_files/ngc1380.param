@@ -1,0 +1,16 @@
+velmap_filename=./data/ngc1380/vel_CO21_arc.fits
+fluxmap_filename=./data/ngc1380/flux_CO21_arc.fits
+x0=240
+y0=230
+ring=0.45
+cover=0.5
+rangeq=[0.1,1.0]
+rangepa=[-15, 25]
+scale=0.02
+plot=False
+verbose=True
+flux_cutoff=0.001
+objname='ngc1380'
+saveloc='./output/'
+saveplots=True
+savedata=True
