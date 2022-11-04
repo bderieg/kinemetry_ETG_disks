@@ -7,6 +7,8 @@ import time
 from astropy.io import fits
 import csv
 import operator
+from regions import Regions
+import regions
 
 from kinemetry_scripts.kinemetry import kinemetry
 import kinemetry_scripts.kinemetry as kin
@@ -43,7 +45,8 @@ default_params = {  # If None, then no default exists--user must define in param
         'verbose' : False,
         'ring' : 0.0,
         'saveplots' : False,
-        'savedata' : False
+        'savedata' : False,
+        'badpixel_filename' : 'none'
     }
 
 #######################################
@@ -119,6 +122,30 @@ for row in range(len(fluxmap)):
         if fluxmap[row][col] < params['flux_cutoff']:
             velmap[row][col] = None
             fluxmap[row][col] = None
+
+# Mask bad pixels from input file
+if params['badpixel_filename'] != 'none':
+    # Read region file
+    regions = Regions.read(params['badpixel_filename'], format='ds9')
+    # Make pixel masks
+    pix_mask_list = []
+    for reg in regions:
+        pix_mask_list.append(reg.to_mask(mode='center'))
+    # Combine all masks
+    combined_pix_mask = np.zeros(velmap.shape)
+    for mask in pix_mask_list:
+        combined_pix_mask += mask.to_image(velmap.shape)
+    # Flip mask values
+    combined_pix_mask = 1 - combined_pix_mask
+    # Make 0s None
+    for row in range(len(combined_pix_mask)):
+        for col in range(len(combined_pix_mask[row])):
+            if combined_pix_mask[row][col] == 0:
+                combined_pix_mask[row][col] = None
+    # Multiply with velmap
+    velmap = np.multiply(velmap, combined_pix_mask)
+    plt.imshow(velmap)
+    plt.show()
 
 # Make mask image
 value_mask = fluxmap.copy()

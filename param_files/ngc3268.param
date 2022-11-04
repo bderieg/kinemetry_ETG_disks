@@ -15,3 +15,4 @@ objname='ngc3268'
 saveloc='./output/'
 saveplots=True
 savedata=True
+badpixel_filename=./data/ngc3268/badpixels.reg
