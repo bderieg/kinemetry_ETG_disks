@@ -30,6 +30,8 @@ and the following other optional parameters
     - A string with the object name; used for file naming if 'save_loc' is set
 - save_loc
     - A string containing a file save location
+- badpixel_filename
+    - File name of a DS9 .reg file containing regions to mask when performing kinemetry
 
 See the existing parameter files as examples.
 
