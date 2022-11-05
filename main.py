@@ -144,14 +144,12 @@ if params['badpixel_filename'] != 'none':
                 combined_pix_mask[row][col] = None
     # Multiply with velmap
     velmap = np.multiply(velmap, combined_pix_mask)
-    plt.imshow(velmap)
-    plt.show()
 
 # Make mask image
 value_mask = fluxmap.copy()
 for row in range(len(fluxmap)):
     for col in range(len(fluxmap[row])):
-        if fluxmap[row][col] > 0:
+        if fluxmap[row][col] > 0 and velmap[row][col] > 0:
             value_mask[row][col] = 1e-5
         else:
             value_mask[row][col] = 1
