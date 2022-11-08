@@ -21,15 +21,22 @@ and the following optional kinemetry parameters (see documentation there)
 - rangeq
 - rangepa
 - ring
+- vsys
 - verbose
 
 and the following other optional parameters
+- drad
+    - Kinemetry will be sampled with this (pixel) spacing in radius. Default is 1.
 - flux_cutoff
     - Velocity values that spatially correspond to flux values below this level will be thrown out before running kinemetry
-- obj_name
+- objname
     - A string with the object name; used for file naming if 'save_loc' is set
-- save_loc
-    - A string containing a file save location
+- saveloc
+    - A string containing a file save location (does not save anything by default; 'saveplots' and/or 'savedata' should also be set)
+- saveplots
+    - If true, some kinemetry plots will be saved to the location specified by 'saveloc'
+- savedata
+    - If true, some useful data will be saved in .csv format to the location specified by 'saveloc'
 - badpixel_filename
     - File name of a DS9 .reg file containing regions to mask when performing kinemetry
 
