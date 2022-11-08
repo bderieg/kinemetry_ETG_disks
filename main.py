@@ -39,6 +39,7 @@ default_params = {  # If None, then no default exists--user must define in param
         'rangeq' : [0.2, 1.0],
         'rangepa' : [-90, 90],
         'vsys' : 0,
+        'drad' : 1,
         'flux_cutoff' : 0.0,
         'saveloc' : 'none',
         'objname' : 'noname',
@@ -189,11 +190,11 @@ fluxbin = np.asarray(fluxbin)
 k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin,
         x0=params['x0'], y0=params['y0'],
         rangeQ=params['rangeq'], rangePA=params['rangepa'],
-        ntrm=params['ntrm'], scale=params['scale'],
+        ntrm=params['ntrm'],
         fixcen=params['fixcen'], nrad=params['nrad'],
         allterms=params['allterms'], even=params['even'],
         cover=params['cover'], plot=params['plot'],
-        vsys=params['vsys'],
+        vsys=params['vsys'], drad=params['drad'],
         ring=params['ring']/params['scale'], verbose=params['verbose']
         )
 

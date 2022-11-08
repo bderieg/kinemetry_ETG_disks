@@ -763,7 +763,7 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
              npa=21, nq=21, rangeQ=None, rangePA=None, allterms=False, 
              even=False, bmodel=True, ring=None, radius=None, cover=0.75, 
              plot=True, verbose=True, nogrid=False, fixcen=True, badpix=None,
-             sky=None, vsys=None): 
+             sky=None, vsys=None, drad=1): 
 
     ## Defining the Result Class ================================
     class Results :
@@ -811,8 +811,9 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
         
     #setting radii
     if radius is None:        
-        pix = np.arange(nrad)
-        rad = pix + 1.1**pix  # geometric progression
+        pix = np.arange(0, nrad, drad)
+        # rad = pix + 1.1**pix
+        rad = pix + 1.0**pix  # geometric progression
     else:
         rad = radius
         nrad = radius.size

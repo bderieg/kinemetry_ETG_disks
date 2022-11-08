@@ -53,55 +53,41 @@ def plot_kinemetry_profiles(k, scale):
     ax = gs.subplots(sharex=True)
 
     # Plot pa
-    # ax[0].errorbar(radii, pa, yerr=er_pa, fmt='k', linewidth=1, elinewidth=1, ecolor='#00000045')
-    lo_bar = list(map(lambda x,y:x-y, pa, er_pa))
-    up_bar = list(map(lambda x,y:x+y, pa, er_pa))
-    ax[0].fill_between(radii, lo_bar, up_bar, color='#00000045', linewidth=0)
-    ax[0].plot(radii, pa, linewidth=1, color='#000000ff')
+    ax[0].errorbar(radii, pa, yerr=er_pa, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[0].set_ylabel('$\Gamma$ (deg)', rotation='horizontal', ha='right')
     ax[0].set_box_aspect(0.5)
     ax[0].set_xlim(left=0)
     ax[0].yaxis.tick_right()
+    ax[0].set_ylim([min(pa)-0.1*(max(pa)-min(pa)), max(pa)+0.1*(max(pa)-min(pa))])
 
     # Plot q
-    lo_bar = list(map(lambda x,y:x-y, q, er_q))
-    up_bar = list(map(lambda x,y:x+y, q, er_q))
-    ax[1].fill_between(radii, lo_bar, up_bar, color='#00000045', linewidth=0)
-    ax[1].plot(radii, q, linewidth=1, color='#000000ff')
+    ax[1].errorbar(radii, q, yerr=er_q, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
     ax[1].set_box_aspect(0.5)
     ax[1].yaxis.set_label_position('right')
+    ax[1].set_ylim([min(q)-0.1*(max(q)-min(q)), max(q)+0.1*(max(q)-min(q))])
 
     # Plot k1
-    lo_bar = list(map(lambda x,y:x-y, k1, list(map(lambda x,y:x*y,er_k1,k1))))
-    up_bar = list(map(lambda x,y:x+y, k1, list(map(lambda x,y:x*y,er_k1,k1))))
-    ax[2].fill_between(radii, lo_bar, up_bar, color='#00000045', linewidth=0)
-    ax[2].plot(radii, k1, linewidth=1, color='#000000ff')
+    ax[2].errorbar(radii, k1, yerr=er_k1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[2].set_ylabel('$k_1$ (km s$^{-1}$)', rotation='horizontal', ha='right')
     ax[2].set_box_aspect(0.5)
     ax[2].yaxis.tick_right()
+    ax[2].set_ylim([min(k1)-0.1*(max(k1)-min(k1)), max(k1)+0.1*(max(k1)-min(k1))])
 
     # Plot k5k1
-    lo_bar = list(map(lambda x,y:x-y, k5k1, list(map(lambda x,y:x*y,er_k5k1,k5k1))))
-    up_bar = list(map(lambda x,y:x+y, k5k1, list(map(lambda x,y:x*y,er_k5k1,k5k1))))
-    ax[3].fill_between(radii, lo_bar, up_bar, color='#00000045', linewidth=0)
-    ax[3].plot(radii, k5k1, linewidth=1, color='#000000ff')
+    ax[3].errorbar(radii, k5k1, yerr=list(map(lambda x,y:x*y, er_k5k1, k5k1)), fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[3].set_xlabel('Radius (arcsec)')
     ax[3].set_ylabel('$k_5/k_1$', rotation='horizontal', ha='left')
     ax[3].set_box_aspect(0.5)
     ax[3].yaxis.set_label_position('right')
+    ax[3].set_ylim([min(k5k1)-0.1*(max(k5k1)-min(k5k1)), max(k5k1)+0.1*(max(k5k1)-min(k5k1))])
 
     # Plot v_sys 
-    lo_bar = list(map(lambda x,y:x-y, k0, er_k0))
-    up_bar = list(map(lambda x,y:x+y, k0, er_k0))
-    ax[4].fill_between(radii, lo_bar, up_bar, color='#00000045', linewidth=0)
-    ax[4].plot(radii, k0, linewidth=1, color='#000000ff')
+    ax[4].errorbar(radii, k0, yerr=er_k0, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[4].set_ylabel('$v_{sys}$ (km s$^{-1}$)', rotation='horizontal', ha='right')
     ax[4].set_box_aspect(0.5)
     ax[4].yaxis.tick_right()
-
-    # Set title
-    fig.suptitle('Kinemetry')
+    ax[4].set_ylim([min(k0)-0.1*(max(k0)-min(k0)), max(k0)+0.1*(max(k0)-min(k0))])
 
     fig.tight_layout()
 
