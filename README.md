@@ -26,7 +26,9 @@ and the following optional kinemetry parameters (see documentation there)
 
 and the following other optional parameters
 - drad
-    - Kinemetry will be sampled with this (pixel) spacing in radius. Default is 1.
+    - Kinemetry will be sampled with this (pixel) spacing in radius. Default is 1.0.
+- incrad
+    - The spacing between successive kinemetry radii is multiplied by this much. Default is 1.0 (evenly spaced).
 - flux_cutoff
     - Velocity values that spatially correspond to flux values below this level will be thrown out before running kinemetry
 - objname
