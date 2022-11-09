@@ -811,9 +811,11 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
         
     #setting radii
     if radius is None:        
-        pix = np.arange(0, nrad, drad)
-        # rad = pix + 1.1**pix
-        rad = pix + 1.0**pix  # geometric progression
+        pix = np.arange(0, nrad*drad, drad)
+        # pix = np.arange(0, nrad)
+        # rad = pix + 1.1**pix  # original code
+        rad = pix + 1.01
+        nrad = rad.size
     else:
         rad = radius
         nrad = radius.size

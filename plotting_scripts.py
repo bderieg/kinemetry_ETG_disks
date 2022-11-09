@@ -5,6 +5,7 @@
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+from matplotlib import ticker
 from plotbin.plot_velfield import plot_velfield
 import pandas as pd
 
@@ -17,7 +18,7 @@ import matplotlib as mpl
 mpl.rcParams['xtick.direction'] = 'in'
 mpl.rcParams['ytick.direction'] = 'in'
 mpl.rcParams['xtick.top'] = True
-mpl.rcParams['ytick.right'] = True
+mpl.rcParams['xtick.bottom'] = True
 mpl.rcParams['xtick.labelsize'] = 'small'
 mpl.rcParams['ytick.labelsize'] = 'small'
 mpl.rcParams['axes.labelpad'] = 10
@@ -59,6 +60,8 @@ def plot_kinemetry_profiles(k, scale):
     ax[0].set_xlim(left=0)
     ax[0].yaxis.tick_right()
     ax[0].set_ylim([min(pa)-0.1*(max(pa)-min(pa)), max(pa)+0.1*(max(pa)-min(pa))])
+    ax[0].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
+    ax[0].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     # Plot q
     ax[1].errorbar(radii, q, yerr=er_q, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
@@ -66,6 +69,8 @@ def plot_kinemetry_profiles(k, scale):
     ax[1].set_box_aspect(0.5)
     ax[1].yaxis.set_label_position('right')
     ax[1].set_ylim([min(q)-0.1*(max(q)-min(q)), max(q)+0.1*(max(q)-min(q))])
+    ax[1].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
+    ax[1].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     # Plot k1
     ax[2].errorbar(radii, k1, yerr=er_k1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
@@ -73,6 +78,8 @@ def plot_kinemetry_profiles(k, scale):
     ax[2].set_box_aspect(0.5)
     ax[2].yaxis.tick_right()
     ax[2].set_ylim([min(k1)-0.1*(max(k1)-min(k1)), max(k1)+0.1*(max(k1)-min(k1))])
+    ax[2].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
+    ax[2].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     # Plot k5k1
     ax[3].errorbar(radii, k5k1, yerr=list(map(lambda x,y:x*y, er_k5k1, k5k1)), fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
@@ -81,6 +88,8 @@ def plot_kinemetry_profiles(k, scale):
     ax[3].set_box_aspect(0.5)
     ax[3].yaxis.set_label_position('right')
     ax[3].set_ylim([min(k5k1)-0.1*(max(k5k1)-min(k5k1)), max(k5k1)+0.1*(max(k5k1)-min(k5k1))])
+    ax[3].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
+    ax[3].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     # Plot v_sys 
     ax[4].errorbar(radii, k0, yerr=er_k0, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
@@ -88,6 +97,8 @@ def plot_kinemetry_profiles(k, scale):
     ax[4].set_box_aspect(0.5)
     ax[4].yaxis.tick_right()
     ax[4].set_ylim([min(k0)-0.1*(max(k0)-min(k0)), max(k0)+0.1*(max(k0)-min(k0))])
+    ax[4].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
+    ax[4].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     fig.tight_layout()
 

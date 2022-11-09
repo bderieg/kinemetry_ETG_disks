@@ -1,2 +1,3 @@
 - Pass binned-by-value map (instead of by pixel)?
 - k5 and k1 errors are wrong; fix them
+- Pass max radius? (e.g., ngc 1380)
