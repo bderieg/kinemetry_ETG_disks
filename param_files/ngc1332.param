@@ -1,13 +1,12 @@
 velmap_filename=./data/ngc1332/vel_CO21_arc.fits
 fluxmap_filename=./data/ngc1332/flux_CO21_arc.fits
-x0=78
-y0=72
+center_method='fc'
 ring=0.1
 rangeq=[0.2,1.0]
 rangepa=[90,180]
 scale=0.04
 cover=0.9
-plot=False
+plot=True
 verbose=True
 flux_cutoff=0.0013
 objname='ngc1332'

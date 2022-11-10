@@ -3,7 +3,7 @@
 A set of scripts using Davor Krajnovic's "kinemetry" program for Python. Specifically for doing moment 1 kinemetry on thin disks from ALMA spectral data.
 
 ## Parameter Files
-The user should create his/her own parameter files for each target. Parameter files should be of the format key=value, one per line, with the following mandatory keys
+The user should create his/her own parameter files for each target. Parameter files should be of the format key=value (if value is a string, quotations should be placed around the it), one per line, with the following mandatory keys
 - velmap_filename
 - fluxmap_filename
 
@@ -12,7 +12,6 @@ and the following optional kinemetry parameters (see documentation there)
 - scale
 - x0
 - y0
-- fixcen
 - nrad
 - allterms
 - even
@@ -25,6 +24,11 @@ and the following optional kinemetry parameters (see documentation there)
 - verbose
 
 and the following other optional parameters
+- center_method
+    - A string with the following options:
+	- 'free': the center will be found separately for each ellipse from the kinemetry best fit
+	- 'fixed': the center will be fixed for all ellipses with the user-defined 'x0' and 'y0' arguments
+	- 'fc': for 'flux centroid'; the center will be fixed for all ellipses at the flux centroid
 - drad
     - Kinemetry will be sampled with this (pixel) spacing in radius. Default is 1.0.
 - incrad

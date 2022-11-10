@@ -1,9 +1,7 @@
 velmap_filename=./data/ngc3268/vel_CO21_arc.fits
 fluxmap_filename=./data/ngc3268/flux_CO21_arc.fits
-x0=65
-y0=65
 ring=0.3
-fixcen=False
+center_method='free'
 rangeq=[0.4,1.0]
 rangepa=[-20, 80]
 drad=2

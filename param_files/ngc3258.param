@@ -1,7 +1,6 @@
 velmap_filename=./data/ngc3258/ngc3258_covel_c4.fits
 fluxmap_filename=./data/ngc3258/ngc3258_coflux_c4.fits
-x0=150
-y0=150
+center_method='fc'
 rangeq=[0.5,1.0]
 rangepa=[45,90]
 drad = 2.5

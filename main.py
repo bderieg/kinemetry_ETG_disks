@@ -28,9 +28,9 @@ default_params = {  # If None, then no default exists--user must define in param
         'fluxmap_filename' : None,
         'ntrm' : 6,
         'scale' : 1,
+        'center_method' : 'free',  # 'free', 'fixed', 'fc'
         'x0' : 0,
         'y0' : 0,
-        'fixcen' : True,
         'nrad' : 100,
         'allterms' : False,
         'even' : False,
@@ -81,6 +81,26 @@ def read_properties(filename):
 
     return result
 
+##############################################
+# Define function to find centroid of a list #
+##############################################
+def centroid(img):
+    weighted_flux_x = 0.0
+    weighted_flux_y = 0.0
+    total_flux = 0.0
+    
+    for row in range(len(img)):
+        for col in range(len(img[row])):
+            if img[row][col] == img[row][col]:
+                weighted_flux_x += col*img[row][col]
+                weighted_flux_y += row*img[row][col]
+                total_flux += img[row][col]
+
+    xc = weighted_flux_x/total_flux
+    yc = weighted_flux_y/total_flux
+
+    return xc, yc
+
 ##################################
 # Attempt to read parameter file #
 ##################################
@@ -102,6 +122,11 @@ for key in default_params:
         params[key] = default_params[key]
 if params['vsys'] == 0:
     params['vsys'] = None
+assert params['center_method'] in {'free', 'fixed', 'fc'}, "\'center_method\' argument value invalid"
+if params['center_method'] == 'free':
+    params['fixcen'] = False
+else:
+    params['fixcen'] = True
 
 ###################
 # Import map data #
@@ -124,6 +149,10 @@ for row in range(len(fluxmap)):
         if fluxmap[row][col] < params['flux_cutoff']:
             velmap[row][col] = None
             fluxmap[row][col] = None
+
+# Find flux center if necessary
+if params['center_method'] != 'fixed':
+    params['x0'], params['y0'] = centroid(fluxmap)
 
 # Mask bad pixels from input file
 if params['badpixel_filename'] != 'none':
