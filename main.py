@@ -1,19 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import astropy.io.fits as pyfits
 from plotbin.plot_velfield import plot_velfield
 import pandas as pd
-import time
 from astropy.io import fits
-import csv
-import operator
-from regions import Regions
 import regions
+from regions import Regions
 
-from kinemetry_scripts.kinemetry import kinemetry
 import kinemetry_scripts.kinemetry as kin
-
 import plotting_scripts as plotter
+import other_functions as func
 
 import sys
 import warnings
@@ -28,7 +23,7 @@ default_params = {  # If None, then no default exists--user must define in param
         'fluxmap_filename' : None,
         'ntrm' : 6,
         'scale' : 1,
-        'center_method' : 'free',  # 'free', 'fixed', 'fc'
+        'center_method' : 'free',
         'x0' : 0,
         'y0' : 0,
         'nrad' : 100,
@@ -51,66 +46,16 @@ default_params = {  # If None, then no default exists--user must define in param
         'badpixel_filename' : 'none'
     }
 
-#######################################
-# Define parameter file read function #
-#######################################
-
-def read_properties(filename):
-    """ Reads a given properties file with each line of the format key=value.  Returns a dictionary containing the pairs.
-
-    Keyword arguments:
-        filename -- the name of the file to be read
-    """
-    result = {}
-    with open(filename, "r") as csvfile:  # Open file as read-only
-        # Define file-read object
-        reader = csv.reader(csvfile, delimiter='=', escapechar='\\', quoting=csv.QUOTE_NONE)
-
-        # Iterate through rows in file
-        for row in reader:
-            row = [i.replace(" ","") for i in row]
-            if len(row) == 0:  # If blank row
-                continue
-            elif len(row) != 2:  # If row doesn't make sense
-                raise csv.Error("Parameter file syntax error on line "+str(row))
-            try:  # Convert data types except for strings
-                row[1] = eval(row[1])
-            except SyntaxError:
-                pass
-            result[row[0].lower()] = row[1]  # Assign row to dictionary
-
-    return result
-
-##############################################
-# Define function to find centroid of a list #
-##############################################
-def centroid(img):
-    weighted_flux_x = 0.0
-    weighted_flux_y = 0.0
-    total_flux = 0.0
-    
-    for row in range(len(img)):
-        for col in range(len(img[row])):
-            if img[row][col] == img[row][col]:
-                weighted_flux_x += col*img[row][col]
-                weighted_flux_y += row*img[row][col]
-                total_flux += img[row][col]
-
-    xc = weighted_flux_x/total_flux
-    yc = weighted_flux_y/total_flux
-
-    return xc, yc
-
 ##################################
 # Attempt to read parameter file #
 ##################################
 
 # Get parameter file name from command line argument
-assert len(sys.argv) == 2, "Incorrect number of arguments (should be 1--parameter file name)"
+assert len(sys.argv) == 2, "Incorrect number of command-line arguments (should be 1: parameter file name)"
 param_filename = sys.argv[1]
 
 # Read file
-params = read_properties(param_filename)
+params = func.read_properties(param_filename)
 
 ###################################################
 # Fill params with default values if not explicit #
@@ -152,7 +97,7 @@ for row in range(len(fluxmap)):
 
 # Find flux center if necessary
 if params['center_method'] != 'fixed':
-    params['x0'], params['y0'] = centroid(fluxmap)
+    params['x0'], params['y0'] = func.centroid(fluxmap)
 
 # Mask bad pixels from input file
 if params['badpixel_filename'] != 'none':
