@@ -26,9 +26,9 @@ and the following optional kinemetry parameters (see documentation there)
 and the following other optional parameters
 - center_method
     - A string with the following options:
-	- 'free': the center will be found separately for each ellipse from the kinemetry best fit
-	- 'fixed': the center will be fixed for all ellipses with the user-defined 'x0' and 'y0' arguments
-	- 'fc': for 'flux centroid'; the center will be fixed for all ellipses at the flux centroid
+        - 'free': the center will be found separately for each ellipse from the kinemetry best fit
+        - 'fixed': the center will be fixed for all ellipses with the user-defined 'x0' and 'y0' arguments
+        - 'fc': for 'flux centroid'; the center will be fixed for all ellipses at the flux centroid
 - drad
     - Kinemetry will be sampled with this (pixel) spacing in radius. Default is 1.0.
 - incrad
