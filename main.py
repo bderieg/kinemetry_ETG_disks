@@ -18,7 +18,7 @@ import logging
 ###########################
 # Define global constants #
 ###########################
-default_params = {  # If None, then no default exists--user must define in parameter file
+default_params = {
         'velmap_filename' : None,
         'fluxmap_filename' : None,
         'ntrm' : 6,
@@ -33,7 +33,7 @@ default_params = {  # If None, then no default exists--user must define in param
         'plot' : True,
         'rangeq' : [0.2, 1.0],
         'rangepa' : [-90, 90],
-        'vsys' : 0,
+        'vsys' : None,
         'drad' : 1,
         'incrad' : 1,
         'flux_cutoff' : 0.0,
@@ -44,6 +44,13 @@ default_params = {  # If None, then no default exists--user must define in param
         'saveplots' : False,
         'savedata' : False,
         'badpixel_filename' : 'none'
+    }
+
+dependencies = {
+        'flux_cutoff' : [('fluxmap_filename', "\'flux_cutoff\' specified but not \'fluxmap\'; \'flux_cutoff\' will be useless")],
+        'saveplots' : [('saveloc', "\'saveplots\' specified but nothing will be saved because \'saveloc\' was not specified")],
+        'savedata' : [('saveloc', "\'savedata\' specified but nothing will be saved because \'saveloc\' was not specified")],
+        '_MANDATORY' : [('velmap_filename', "Could not perform kinemetry because \'velmap_filename\' keyword missing from parameter file")]
     }
 
 ##################################
@@ -61,17 +68,28 @@ params = func.read_properties(param_filename)
 # Fill params with default values if not explicit #
 ###################################################
 
+original_params = params.copy()
 for key in default_params:
     if key not in params:
-        assert default_params[key] is not None, "Mandatory argument not specified in parameter file: " + key
         params[key] = default_params[key]
-if params['vsys'] == 0:
-    params['vsys'] = None
+    if key in dependencies:
+        for item in dependencies[key]:
+            if item[0] not in original_params:
+                logging.warning(item[1])
 assert params['center_method'] in {'free', 'fixed', 'fc'}, "\'center_method\' argument value invalid"
 if params['center_method'] == 'free':
     params['fixcen'] = False
 else:
     params['fixcen'] = True
+
+#####################################################
+# Exit cleanly if mandatory arguments not specified #
+#####################################################
+
+for item in dependencies['_MANDATORY']:
+    if item[0] not in original_params:
+        logging.warning(item[1])
+        exit()
 
 ###################
 # Import map data #
@@ -79,7 +97,10 @@ else:
 
 # Import images from fits
 velmap = fits.open(params['velmap_filename'])[0].data
-fluxmap = fits.open(params['fluxmap_filename'])[0].data
+if params['fluxmap_filename'] is not None:
+    fluxmap = fits.open(params['fluxmap_filename'])[0].data
+else:  # If fluxmap not specified
+    fluxmap = np.asarray(list(map(lambda x:list(map(lambda row:1e9,x)), velmap)))  # list of arbitrary values of same size as velmap
 
 # None-ify empty pixels
 for row in range(len(velmap)):
