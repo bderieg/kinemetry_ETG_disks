@@ -1,4 +1,5 @@
 import csv
+import matplotlib.pyplot as plt
 
 ################################
 # Parameter file read function #

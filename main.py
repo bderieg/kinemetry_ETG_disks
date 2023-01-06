@@ -83,6 +83,13 @@ if params['center_method'] == 'free':
 else:
     params['fixcen'] = True
 
+##########################################
+# Give warnings for ill-specified params #
+##########################################
+
+if params['rangeq'][0] == 0.0:
+    logging.warning('setting 0 as a lower bound for \'rangeq\' may result in kinemetry failure; use a small non-zero value instead')
+
 #####################################################
 # Exit cleanly if mandatory arguments not specified #
 #####################################################
@@ -116,12 +123,19 @@ for row in range(len(velmap)):
             errormap[row][col] = None
 
 # None-ify unreliable pixels
+fluxmap_size = len(fluxmap)*len(fluxmap[0])
+num_noneified = 0.0
 for row in range(len(fluxmap)):
     for col in range(len(fluxmap[row])):
         if fluxmap[row][col] < params['flux_cutoff']:
             velmap[row][col] = None
             fluxmap[row][col] = None
             errormap[row][col] = None
+            num_noneified += 1.0
+
+# Warn if too many pixels are none-ified
+if num_noneified/fluxmap_size > 0.98:
+    logging.warning('\'flux_cutoff\' is set very high, so not many values are passed to kinemetry; this could result in kinemetry failure')
 
 # Find flux center if necessary
 if params['center_method'] != 'fixed':
