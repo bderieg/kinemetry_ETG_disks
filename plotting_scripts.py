@@ -35,18 +35,26 @@ mpl.rcParams['axes.labelpad'] = 10
 def plot_kinemetry_profiles(k, scale):
     # Retrieve relevant kinemetry outputs
     k0 = k.cf[:,0]
-    er_k0 = k.er_cf[:,0]
+    er_k0 = k.cf[:,0]
     radii = k.rad[:]*scale
     pa = k.pa[:]
     er_pa = k.er_pa[:]
     q = k.q[:]
     er_q = k.er_q[:]
     k1 = np.sqrt(k.cf[:,1]**2 + k.cf[:,2]**2)
-    er_k1 = 1 - (np.sqrt(k.cf[:,1]**2 + k.cf[:,2]**2))/np.sqrt((k.cf[:,1]+k.er_cf[:,1])**2 + (k.cf[:,2]+k.er_cf[:,2])**2)
     k5 = np.sqrt(k.cf[:,5]**2 + k.cf[:,6]**2)
-    er_k5 = 1 - (np.sqrt(k.cf[:,5]**2 + k.cf[:,6]**2))/np.sqrt((k.cf[:,5]+k.er_cf[:,5])**2 + (k.cf[:,6]+k.er_cf[:,6])**2)
-    k5k1 = k5/k1
-    er_k5k1 = 1 - (np.sqrt(k.cf[:,1]**2+k.cf[:,2]**2)*np.sqrt((k.cf[:,5]+k.er_cf[:,5])**2+(k.cf[:,6]+k.er_cf[:,6])**2))/(np.sqrt((k.cf[:,1]+k.er_cf[:,1])**2+(k.cf[:,2]+k.er_cf[:,2])**2)*np.sqrt(k.cf[:,5]**2+k.cf[:,6]**2))
+    
+    da1_sq = 2 * k.er_cf[:,1] * k.cf[:,1]
+    db1_sq = 2 * k.er_cf[:,2] * k.cf[:,2]
+    dk1_sq = np.sqrt(da1_sq + db1_sq)
+    dk1 = 0.5 * dk1_sq / k1
+
+    da5_sq = 2 * k.er_cf[:,5] * k.cf[:,5]
+    db5_sq = 2 * k.er_cf[:,6] * k.cf[:,6]
+    dk5_sq = np.sqrt(da5_sq + db5_sq)
+    dk5 = 0.5 * dk5_sq / k5
+
+    dk5k1 = (k5/k1) * np.sqrt((dk1/k1)**2 + (dk5/k5)**2)
 
     # Set up figure architecture
     fig = plt.figure()
