@@ -1,0 +1,16 @@
+velmap_filename='./examples/data/ngc1332/mom1_approx_binned.fits'
+fluxmap_filename='./examples/data/ngc1332/mom0_approx_binned.fits'
+velmap_unc_filename='./examples/data/ngc1332/mom1_approx_unc_binned.fits'
+center_method='fc'
+ring=0.2
+rangeq=[0.1,1.0]
+rangepa=[100,150]
+scale=0.04
+cover=1.0
+plot=False
+verbose=True
+flux_cutoff=0.0013
+objname='ngc1332'
+saveloc='./examples/output/'
+saveplots=True
+savedata=True

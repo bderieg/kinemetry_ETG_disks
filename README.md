@@ -3,7 +3,7 @@
 A set of scripts using Davor Krajnovic's "kinemetry" program for Python. Specifically for doing moment 1 kinemetry on thin disks from ALMA spectral data.
 
 ## Parameter Files
-The user should create his/her own parameter files for each target. Parameter files should be of the format key=value (if value is a string, quotations should be placed around the it), one per line, with the following mandatory keys
+The user should create his/her own parameter files for each target (see examples folder). Parameter files should be of the format key=value (if value is a string, quotations should be placed around the it), one per line, with the following mandatory keys
 - velmap_filename
 - fluxmap_filename
 
@@ -45,6 +45,8 @@ and the following other optional parameters
     - If true, some useful data will be saved in .csv format to the location specified by 'saveloc'
 - badpixel_filename
     - File name of a DS9 .reg file containing regions to mask when performing kinemetry
+- uncmap_filename
+    - File name of moment 1 uncertainty map
 
 See the existing parameter files as examples.
 
@@ -53,4 +55,4 @@ With parameter files specified, kinemetry can be run with
 ```
 python3 main.py [parameter file]
 ```
-(or equivalent command with whatever alias python is set to). Optionally, the user can run the 'run_all.sh' script, which will automatically run kinemetry on all the parameter files ending in ".param" which are located in the "param_files" folder.
+(or equivalent command with whatever alias python is set to). If the user just wants to run the examples, a shell script titled 'run_all.sh' has been placed in the 'examples' folder for convenience (this runs kinemetry on all the data/parameter files in the 'examples' folder). Note that the 'examples/data' folder is intentionally left empty, to be filled when the user runs these examples.

@@ -1,5 +1,5 @@
-velmap_filename=./data/ngc3258/ngc3258_covel_c4.fits
-fluxmap_filename=./data/ngc3258/ngc3258_coflux_c4.fits
+velmap_filename=./examples/data/ngc3258/ngc3258_covel_c4.fits
+fluxmap_filename=./examples/data/ngc3258/ngc3258_coflux_c4.fits
 center_method='fc'
 rangeq=[0.5,1.0]
 rangepa=[45,90]
@@ -7,7 +7,7 @@ drad = 2.5
 scale=0.015
 plot=False
 flux_cutoff=0.001
-saveloc='./output/'
+saveloc='./examples/output/'
 objname='ngc3258'
 verbose=True
 ring=0.1

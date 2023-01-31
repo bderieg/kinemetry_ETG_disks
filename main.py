@@ -21,7 +21,8 @@ import logging
 default_params = {
         'velmap_filename' : None,
         'fluxmap_filename' : None,
-        'errormap_filename' : None,
+        'velmap_unc_filename' : None,
+        'fluxmap_unc_filename' : None,
         'ntrm' : 6,
         'scale' : 1,
         'center_method' : 'free',
@@ -109,10 +110,10 @@ if params['fluxmap_filename'] is not None:
     fluxmap = fits.open(params['fluxmap_filename'])[0].data
 else:  # If fluxmap not specified
     fluxmap = np.asarray(list(map(lambda x:list(map(lambda row:1e9,x)), velmap)))  # list of arbitrary values of same size as velmap
-if params['errormap_filename'] is not None:
-    errormap = fits.open(params['errormap_filename'])[0].data
-else:  # If errormap not specified
-    errormap = np.asarray(list(map(lambda x:list(map(lambda row:1.0,x)), velmap)))  # list of arbitrary values of same size as velmap
+if params['velmap_unc_filename'] is not None:
+    velmap_unc = fits.open(params['velmap_unc_filename'])[0].data
+else:  # If velmap_unc not specified
+    velmap_unc = np.asarray(list(map(lambda x:list(map(lambda row:1.0,x)), velmap)))  # list of arbitrary values of same size as velmap
 
 # None-ify empty pixels
 for row in range(len(velmap)):
@@ -120,7 +121,7 @@ for row in range(len(velmap)):
         if velmap[row][col] == 0.0:
             velmap[row][col] = None
             fluxmap[row][col] = None
-            errormap[row][col] = None
+            velmap_unc[row][col] = None
 
 # None-ify unreliable pixels
 fluxmap_size = len(fluxmap)*len(fluxmap[0])
@@ -130,7 +131,7 @@ for row in range(len(fluxmap)):
         if fluxmap[row][col] < params['flux_cutoff']:
             velmap[row][col] = None
             fluxmap[row][col] = None
-            errormap[row][col] = None
+            velmap_unc[row][col] = None
             num_noneified += 1.0
 
 # Warn if too many pixels are none-ified
@@ -162,7 +163,7 @@ if params['badpixel_filename'] != 'none':
                 combined_pix_mask[row][col] = None
     # Multiply with velmap
     velmap = np.multiply(velmap, combined_pix_mask)
-    errormap = np.multiply(velmap, combined_pix_mask)
+    velmap_unc = np.multiply(velmap, combined_pix_mask)
 
 # Make mask image
 value_mask = fluxmap.copy()
@@ -182,34 +183,34 @@ xbin_nan = xx.ravel()
 ybin_nan = yy.ravel()
 velbin_nan = velmap.ravel()
 fluxbin_nan = fluxmap.ravel()
-errorbin_nan = errormap.ravel()
+velbin_unc_nan = velmap_unc.ravel()
 
 # Make new lists sans nan values
 xbin = []
 ybin = []
 velbin = []
 fluxbin = []
-errorbin = []
+velbin_unc = []
 for itr in range(len(velbin_nan)):
     if velbin_nan[itr] == velbin_nan[itr]:
         xbin.append(xbin_nan[itr])
         ybin.append(ybin_nan[itr])
         velbin.append(velbin_nan[itr])
         fluxbin.append(fluxbin_nan[itr])
-        errorbin.append(errorbin_nan[itr])
+        velbin_unc.append(velbin_unc_nan[itr])
 
 # Convert to arrays
 xbin = np.asarray(xbin)
 ybin = np.asarray(ybin)
 velbin = np.asarray(velbin)
 fluxbin = np.asarray(fluxbin)
-errorbin = np.asarray(errorbin)
+velbin_unc = np.asarray(velbin_unc)
 
 ##############################
 # Do the main kinemetry task #
 ##############################
 
-k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=errorbin,
+k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
         x0=params['x0'], y0=params['y0'],
         rangeQ=params['rangeq'], rangePA=params['rangepa'],
         ntrm=params['ntrm'], incrad=params['incrad'],
