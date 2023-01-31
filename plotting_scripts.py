@@ -44,18 +44,18 @@ def plot_kinemetry_profiles(k, scale):
     k1 = np.sqrt(k.cf[:,1]**2 + k.cf[:,2]**2)
     k5 = np.sqrt(k.cf[:,5]**2 + k.cf[:,6]**2)
     
-    da1_sq = 2 * k.er_cf[:,1] * k.cf[:,1]
-    db1_sq = 2 * k.er_cf[:,2] * k.cf[:,2]
+    da1_sq = 2 * k.er_cf[:,1] * np.abs(k.cf[:,1])
+    db1_sq = 2 * k.er_cf[:,2] * np.abs(k.cf[:,2])
     dk1_sq = np.sqrt(da1_sq + db1_sq)
-    dk1 = 0.5 * dk1_sq / k1
+    dk1 = 0.5 * dk1_sq * np.abs(k1**-1)
 
-    da5_sq = 2 * k.er_cf[:,5] * k.cf[:,5]
-    db5_sq = 2 * k.er_cf[:,6] * k.cf[:,6]
+    da5_sq = 2 * k.er_cf[:,5] * np.abs(k.cf[:,5])
+    db5_sq = 2 * k.er_cf[:,6] * np.abs(k.cf[:,6])
     dk5_sq = np.sqrt(da5_sq + db5_sq)
-    dk5 = 0.5 * dk5_sq / k5
+    dk5 = 0.5 * dk5_sq * np.abs(k5**-1)
 
     k5k1 = k5/k1
-    dk5k1 = (k5/k1) * np.sqrt((dk1/k1)**2 + (dk5/k5)**2)
+    dk5k1 = np.abs(k5k1) * np.sqrt((dk1/k1)**2 + (dk5/k5)**2)
 
     # Set up figure architecture
     fig = plt.figure()
