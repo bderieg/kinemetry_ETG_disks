@@ -35,12 +35,12 @@ mpl.rcParams['axes.labelpad'] = 10
 def plot_kinemetry_profiles(k, scale):
     # Retrieve relevant kinemetry outputs
     k0 = k.cf[:,0]
-    er_k0 = k.cf[:,0]
+    dk0 = k.cf[:,0]
     radii = k.rad[:]*scale
     pa = k.pa[:]
-    er_pa = k.er_pa[:]
+    dpa = k.er_pa[:]
     q = k.q[:]
-    er_q = k.er_q[:]
+    dq = k.er_q[:]
     k1 = np.sqrt(k.cf[:,1]**2 + k.cf[:,2]**2)
     k5 = np.sqrt(k.cf[:,5]**2 + k.cf[:,6]**2)
     
@@ -54,6 +54,7 @@ def plot_kinemetry_profiles(k, scale):
     dk5_sq = np.sqrt(da5_sq + db5_sq)
     dk5 = 0.5 * dk5_sq / k5
 
+    k5k1 = k5/k1
     dk5k1 = (k5/k1) * np.sqrt((dk1/k1)**2 + (dk5/k5)**2)
 
     # Set up figure architecture
@@ -62,7 +63,7 @@ def plot_kinemetry_profiles(k, scale):
     ax = gs.subplots(sharex=True)
 
     # Plot pa
-    ax[0].errorbar(radii, pa, yerr=er_pa, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    ax[0].errorbar(radii, pa, yerr=dpa, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[0].set_ylabel('$\Gamma$ (deg)', rotation='horizontal', ha='right')
     ax[0].set_box_aspect(0.5)
     ax[0].set_xlim(left=0)
@@ -72,7 +73,7 @@ def plot_kinemetry_profiles(k, scale):
     ax[0].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     # Plot q
-    ax[1].errorbar(radii, q, yerr=er_q, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    ax[1].errorbar(radii, q, yerr=dq, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
     ax[1].set_box_aspect(0.5)
     ax[1].yaxis.set_label_position('right')
@@ -81,7 +82,7 @@ def plot_kinemetry_profiles(k, scale):
     ax[1].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     # Plot k1
-    ax[2].errorbar(radii, k1, yerr=er_k1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    ax[2].errorbar(radii, k1, yerr=dk1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[2].set_ylabel('$k_1$ (km s$^{-1}$)', rotation='horizontal', ha='right')
     ax[2].set_box_aspect(0.5)
     ax[2].yaxis.tick_right()
@@ -90,7 +91,7 @@ def plot_kinemetry_profiles(k, scale):
     ax[2].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     # Plot k5k1
-    ax[3].errorbar(radii, k5k1, yerr=list(map(lambda x,y:x*y, er_k5k1, k5k1)), fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    ax[3].errorbar(radii, k5k1, yerr=dk5k1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[3].set_xlabel('Radius (arcsec)')
     ax[3].set_ylabel('$k_5/k_1$', rotation='horizontal', ha='left')
     ax[3].set_box_aspect(0.5)
@@ -100,7 +101,7 @@ def plot_kinemetry_profiles(k, scale):
     ax[3].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     # Plot v_sys 
-    ax[4].errorbar(radii, k0, yerr=er_k0, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    ax[4].errorbar(radii, k0, yerr=dk0, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[4].set_ylabel('$v_{sys}$ (km s$^{-1}$)', rotation='horizontal', ha='right')
     ax[4].set_box_aspect(0.5)
     ax[4].yaxis.tick_right()
@@ -114,15 +115,15 @@ def plot_kinemetry_profiles(k, scale):
     data = pd.DataFrame(
                 {
                     'pa' : pa,
-                    'er_pa' : er_pa,
+                    'dpa' : dpa,
                     'q' : q,
-                    'er_q' : er_q,
+                    'dq' : dq,
                     'k1' : k1,
-                    'er_k1' : er_k1,
+                    'dk1' : dk1,
                     'k5k1' : k5k1,
-                    'er_k5k1' : er_k5k1,
+                    'dk5k1' : dk5k1,
                     'k0' : k0,
-                    'er_k0' : er_k0
+                    'dk0' : dk0
                 }
             )
     data.index = radii
