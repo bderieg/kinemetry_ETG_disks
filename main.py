@@ -13,7 +13,7 @@ import other_functions as func
 import sys
 import warnings
 import logging
-# warnings.filterwarnings(action='ignore', category=UserWarning)  # Comment to allow warnings
+# warnings.filterwarnings(action='ignore', category=UserWarning)  # Uncomment to supress all warnings
 
 ###########################
 # Define global constants #
@@ -22,7 +22,7 @@ default_params = {
         'velmap_filename' : None,
         'fluxmap_filename' : None,
         'velmap_unc_filename' : None,
-        'fluxmap_unc_filename' : None,
+        'bins_filename' : None,
         'ntrm' : 6,
         'scale' : 1,
         'center_method' : 'free',
@@ -52,7 +52,7 @@ dependencies = {
         'flux_cutoff' : [('fluxmap_filename', "\'flux_cutoff\' specified but not \'fluxmap\'; \'flux_cutoff\' will be useless")],
         'saveplots' : [('saveloc', "\'saveplots\' specified but nothing will be saved because \'saveloc\' was not specified")],
         'savedata' : [('saveloc', "\'savedata\' specified but nothing will be saved because \'saveloc\' was not specified")],
-        '_MANDATORY' : [('velmap_filename', "Could not perform kinemetry because \'velmap_filename\' keyword missing from parameter file")]
+        '_MANDATORY' : [(['velmap_filename','bins_filename'], "Could not perform kinemetry because \'velmap_filename\' keyword missing from parameter file")]
     }
 
 ##################################
@@ -96,115 +96,136 @@ if params['rangeq'][0] == 0.0:
 #####################################################
 
 for item in dependencies['_MANDATORY']:
-    if item[0] not in original_params:
+    if not any([itr in original_params for itr in item[0]]):
         logging.warning(item[1])
         exit()
 
-###################
-# Import map data #
-###################
+###############################################
+# Use bin map or velocity map from fits file? #
+###############################################
 
-# Import images from fits
-velmap = fits.open(params['velmap_filename'])[0].data
-if params['fluxmap_filename'] is not None:
-    fluxmap = fits.open(params['fluxmap_filename'])[0].data
-else:  # If fluxmap not specified
-    fluxmap = np.asarray(list(map(lambda x:list(map(lambda row:1e9,x)), velmap)))  # list of arbitrary values of same size as velmap
-if params['velmap_unc_filename'] is not None:
-    velmap_unc = fits.open(params['velmap_unc_filename'])[0].data
-else:  # If velmap_unc not specified
-    velmap_unc = np.asarray(list(map(lambda x:list(map(lambda row:1.0,x)), velmap)))  # list of arbitrary values of same size as velmap
+usefits = True
+if 'binmap_filename' in original_params:
+    usefits = False
+    if 'velmap_filename' in original_params:
+        logging.warning("\'velmap_filename\' and \'binmap_filename\' were both specified . . . defaulting to latter")
 
-# None-ify empty pixels
-for row in range(len(velmap)):
-    for col in range(len(velmap[row])):
-        if velmap[row][col] == 0.0:
-            velmap[row][col] = None
-            fluxmap[row][col] = None
-            velmap_unc[row][col] = None
+#########################################
+# Import map data (if using fits files) #
+#########################################
+if usefits:
 
-# None-ify unreliable pixels
-fluxmap_size = len(fluxmap)*len(fluxmap[0])
-num_noneified = 0.0
-for row in range(len(fluxmap)):
-    for col in range(len(fluxmap[row])):
-        if fluxmap[row][col] < params['flux_cutoff']:
-            velmap[row][col] = None
-            fluxmap[row][col] = None
-            velmap_unc[row][col] = None
-            num_noneified += 1.0
+    # Import images from fits
+    velmap = fits.open(params['velmap_filename'])[0].data
+    if params['fluxmap_filename'] is not None:
+        fluxmap = fits.open(params['fluxmap_filename'])[0].data
+    else:  # If fluxmap not specified
+        fluxmap = np.asarray(list(map(lambda x:list(map(lambda row:1e9,x)), velmap)))  # list of arbitrary values of same size as velmap
+    if params['velmap_unc_filename'] is not None:
+        velmap_unc = fits.open(params['velmap_unc_filename'])[0].data
+    else:  # If velmap_unc not specified
+        velmap_unc = np.asarray(list(map(lambda x:list(map(lambda row:1.0,x)), velmap)))  # list of arbitrary values of same size as velmap
+    
+    # None-ify empty pixels
+    for row in range(len(velmap)):
+        for col in range(len(velmap[row])):
+            if velmap[row][col] == 0.0:
+                velmap[row][col] = None
+                fluxmap[row][col] = None
+                velmap_unc[row][col] = None
+    
+    # None-ify unreliable pixels
+    fluxmap_size = len(fluxmap)*len(fluxmap[0])
+    num_noneified = 0.0
+    for row in range(len(fluxmap)):
+        for col in range(len(fluxmap[row])):
+            if fluxmap[row][col] < params['flux_cutoff']:
+                velmap[row][col] = None
+                fluxmap[row][col] = None
+                velmap_unc[row][col] = None
+                num_noneified += 1.0
+    
+    # Warn if too many pixels are none-ified
+    if num_noneified/fluxmap_size > 0.98:
+        logging.warning('\'flux_cutoff\' is set very high, so not many values are passed to kinemetry; this could result in kinemetry failure')
+    
+    # Find flux center if necessary
+    if params['center_method'] != 'fixed':
+        params['x0'], params['y0'] = func.centroid(fluxmap)
+    
+    # Mask bad pixels from input file
+    if params['badpixel_filename'] != 'none':
+        # Read region file
+        regions = Regions.read(params['badpixel_filename'], format='ds9')
+        # Make pixel masks
+        pix_mask_list = []
+        for reg in regions:
+            pix_mask_list.append(reg.to_mask(mode='center'))
+        # Combine all masks
+        combined_pix_mask = np.zeros(velmap.shape)
+        for mask in pix_mask_list:
+            combined_pix_mask += mask.to_image(velmap.shape)
+        # Flip mask values
+        combined_pix_mask = 1 - combined_pix_mask
+        # Make 0s None
+        for row in range(len(combined_pix_mask)):
+            for col in range(len(combined_pix_mask[row])):
+                if combined_pix_mask[row][col] == 0:
+                    combined_pix_mask[row][col] = None
+        # Multiply with velmap
+        velmap = np.multiply(velmap, combined_pix_mask)
+        velmap_unc = np.multiply(velmap, combined_pix_mask)
+    
+    # Make mask image
+    value_mask = fluxmap.copy()
+    for row in range(len(fluxmap)):
+        for col in range(len(fluxmap[row])):
+            if fluxmap[row][col] > 0 and velmap[row][col] > 0:
+                value_mask[row][col] = 1e-5
+            else:
+                value_mask[row][col] = 1
+    
+    # Convert to 1D arrays
+    ny,nx = velmap.shape
+    x = (np.arange(0,nx))
+    y = (np.arange(0,ny))
+    xx, yy = np.meshgrid(x, y)
+    xbin_nan = xx.ravel()
+    ybin_nan = yy.ravel()
+    velbin_nan = velmap.ravel()
+    fluxbin_nan = fluxmap.ravel()
+    velbin_unc_nan = velmap_unc.ravel()
+    
+    # Make new lists sans nan values
+    xbin = []
+    ybin = []
+    velbin = []
+    fluxbin = []
+    velbin_unc = []
+    for itr in range(len(velbin_nan)):
+        if velbin_nan[itr] == velbin_nan[itr]:
+            xbin.append(xbin_nan[itr])
+            ybin.append(ybin_nan[itr])
+            velbin.append(velbin_nan[itr])
+            fluxbin.append(fluxbin_nan[itr])
+            velbin_unc.append(velbin_unc_nan[itr])
+    
+    # Convert to arrays
+    xbin = np.asarray(xbin)
+    ybin = np.asarray(ybin)
+    velbin = np.asarray(velbin)
+    fluxbin = np.asarray(fluxbin)
+    velbin_unc = np.asarray(velbin_unc)
 
-# Warn if too many pixels are none-ified
-if num_noneified/fluxmap_size > 0.98:
-    logging.warning('\'flux_cutoff\' is set very high, so not many values are passed to kinemetry; this could result in kinemetry failure')
+######################################
+# Import map data (if using bin map) #
+######################################
+else:
 
-# Find flux center if necessary
-if params['center_method'] != 'fixed':
-    params['x0'], params['y0'] = func.centroid(fluxmap)
-
-# Mask bad pixels from input file
-if params['badpixel_filename'] != 'none':
-    # Read region file
-    regions = Regions.read(params['badpixel_filename'], format='ds9')
-    # Make pixel masks
-    pix_mask_list = []
-    for reg in regions:
-        pix_mask_list.append(reg.to_mask(mode='center'))
-    # Combine all masks
-    combined_pix_mask = np.zeros(velmap.shape)
-    for mask in pix_mask_list:
-        combined_pix_mask += mask.to_image(velmap.shape)
-    # Flip mask values
-    combined_pix_mask = 1 - combined_pix_mask
-    # Make 0s None
-    for row in range(len(combined_pix_mask)):
-        for col in range(len(combined_pix_mask[row])):
-            if combined_pix_mask[row][col] == 0:
-                combined_pix_mask[row][col] = None
-    # Multiply with velmap
-    velmap = np.multiply(velmap, combined_pix_mask)
-    velmap_unc = np.multiply(velmap, combined_pix_mask)
-
-# Make mask image
-value_mask = fluxmap.copy()
-for row in range(len(fluxmap)):
-    for col in range(len(fluxmap[row])):
-        if fluxmap[row][col] > 0 and velmap[row][col] > 0:
-            value_mask[row][col] = 1e-5
-        else:
-            value_mask[row][col] = 1
-
-# Convert to 1D arrays
-ny,nx = velmap.shape
-x = (np.arange(0,nx))
-y = (np.arange(0,ny))
-xx, yy = np.meshgrid(x, y)
-xbin_nan = xx.ravel()
-ybin_nan = yy.ravel()
-velbin_nan = velmap.ravel()
-fluxbin_nan = fluxmap.ravel()
-velbin_unc_nan = velmap_unc.ravel()
-
-# Make new lists sans nan values
-xbin = []
-ybin = []
-velbin = []
-fluxbin = []
-velbin_unc = []
-for itr in range(len(velbin_nan)):
-    if velbin_nan[itr] == velbin_nan[itr]:
-        xbin.append(xbin_nan[itr])
-        ybin.append(ybin_nan[itr])
-        velbin.append(velbin_nan[itr])
-        fluxbin.append(fluxbin_nan[itr])
-        velbin_unc.append(velbin_unc_nan[itr])
-
-# Convert to arrays
-xbin = np.asarray(xbin)
-ybin = np.asarray(ybin)
-velbin = np.asarray(velbin)
-fluxbin = np.asarray(fluxbin)
-velbin_unc = np.asarray(velbin_unc)
+    print("")
+    print("Kinemetry on bin map files is not yet supported . . . sorry for the inconvenience")
+    print("")
+    exit()
 
 ##############################
 # Do the main kinemetry task #

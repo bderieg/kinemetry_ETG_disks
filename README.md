@@ -45,7 +45,7 @@ and the following other optional parameters
     - If true, some useful data will be saved in .csv format to the location specified by 'saveloc'
 - badpixel_filename
     - File name of a DS9 .reg file containing regions to mask when performing kinemetry
-- uncmap_filename
+- velmap_unc_filename
     - File name of moment 1 uncertainty map
 
 See the existing parameter files as examples.

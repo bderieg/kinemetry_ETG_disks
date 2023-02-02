@@ -33,6 +33,7 @@ mpl.rcParams['axes.labelpad'] = 10
 ##############################################################
 
 def plot_kinemetry_profiles(k, scale):
+
     # Retrieve kinemetry outputs and calculate uncertainties
     radii = k.rad[:]*scale
 
@@ -51,18 +52,18 @@ def plot_kinemetry_profiles(k, scale):
     ## k1 (i.e., sqrt(A_1^2 + B_1^2))
     k1 = np.sqrt(k.cf[:,1]**2 + k.cf[:,2]**2)
     ### intermediate uncertainty propagation calculations
-    da1_sq = 2 * k.er_cf[:,1] * np.abs(k.cf[:,1])
-    db1_sq = 2 * k.er_cf[:,2] * np.abs(k.cf[:,2])
-    dk1_sq = np.sqrt(da1_sq + db1_sq)
+    da1 = 2 * k.er_cf[:,1] * np.abs(k.cf[:,1])
+    db1 = 2 * k.er_cf[:,2] * np.abs(k.cf[:,2])
+    dk1_sq = np.sqrt(da1**2 + db1**2)
     ### final uncertainty calculation
     dk1 = 0.5 * dk1_sq * np.abs(k1**-1)
 
     ## k5 (i.e., sqrt(A_5^2 + B_5^2))
     k5 = np.sqrt(k.cf[:,5]**2 + k.cf[:,6]**2)
     ### intermediate uncertainty propagation calculations
-    da5_sq = 2 * k.er_cf[:,5] * np.abs(k.cf[:,5])
-    db5_sq = 2 * k.er_cf[:,6] * np.abs(k.cf[:,6])
-    dk5_sq = np.sqrt(da5_sq + db5_sq)
+    da5 = 2 * k.er_cf[:,5] * np.abs(k.cf[:,5])
+    db5 = 2 * k.er_cf[:,6] * np.abs(k.cf[:,6])
+    dk5_sq = np.sqrt(da5**2 + db5**2)
     ### final uncertainty calculation
     dk5 = 0.5 * dk5_sq * np.abs(k5**-1)
 
