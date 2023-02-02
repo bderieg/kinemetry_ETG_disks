@@ -19,6 +19,8 @@ and the following optional kinemetry parameters (see documentation there)
 - plot
 - rangeq
 - rangepa
+- nq
+- npa
 - ring
 - vsys
 - verbose
