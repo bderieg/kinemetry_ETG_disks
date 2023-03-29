@@ -73,7 +73,7 @@ def plot_kinemetry_profiles(k, scale):
 
     # Set up figure architecture
     fig = plt.figure()
-    gs = fig.add_gridspec(5, hspace=0)
+    gs = fig.add_gridspec(4, hspace=0)
     ax = gs.subplots(sharex=True)
 
     # Plot pa
@@ -114,14 +114,14 @@ def plot_kinemetry_profiles(k, scale):
     ax[3].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[3].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
-    # Plot v_sys 
-    ax[4].errorbar(radii, k0, yerr=dk0, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
-    ax[4].set_ylabel('$v_{sys}$ (km s$^{-1}$)', rotation='horizontal', ha='right')
-    ax[4].set_box_aspect(0.5)
-    ax[4].yaxis.tick_right()
-    ax[4].set_ylim([min(k0)-0.1*(max(k0)-min(k0)), max(k0)+0.1*(max(k0)-min(k0))])
-    ax[4].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
-    ax[4].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
+    # # Plot v_sys 
+    # ax[4].errorbar(radii, k0, yerr=dk0, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    # ax[4].set_ylabel('$v_{sys}$ (km s$^{-1}$)', rotation='horizontal', ha='right')
+    # ax[4].set_box_aspect(0.5)
+    # ax[4].yaxis.tick_right()
+    # ax[4].set_ylim([min(k0)-0.1*(max(k0)-min(k0)), max(k0)+0.1*(max(k0)-min(k0))])
+    # ax[4].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
+    # ax[4].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     fig.tight_layout()
 

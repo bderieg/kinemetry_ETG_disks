@@ -6,6 +6,7 @@ from astropy.io import fits
 import regions
 from regions import Regions
 import scipy.interpolate as interp
+from pykrige.ok import OrdinaryKriging as uk
 
 import kinemetry_scripts.kinemetry as kin
 import plotting_scripts as plotter
@@ -253,26 +254,137 @@ ybin = np.asarray(ycent)
 velbin = np.asarray(velcent)
 fluxbin = np.asarray(fluxcent)
 
-# Interpolate
+#################################################
+
+# Interpolate (RBF)
 xyi = np.transpose(np.concatenate([[xbin],[ybin]]))
-rbf_flux = interp.RBFInterpolator(xyi, fluxbin, kernel='thin_plate_spline')
-rbf_vel = interp.RBFInterpolator(xyi, velbin)
+rbf_flux = interp.RBFInterpolator(xyi, fluxbin, kernel='multiquadric', epsilon=20)
+rbf_vel = interp.RBFInterpolator(xyi, velbin, kernel='cubic')
 outxy = np.transpose(np.concatenate([[xbin_pix,ybin_pix]]))
 flux_interp = rbf_flux(outxy)
 vel_interp = rbf_vel(outxy)
 
 # Plot to make sure it looks good
-outgrid = np.zeros([len(velmap),len(velmap)])
-for n,row,col in zip(range(len(flux_interp)),xbin_pix,ybin_pix):
-    outgrid[row,col] = flux_interp[n]
-plt.imshow(np.rot90(outgrid))
+outgrid = np.zeros([len(velmap[0]),len(velmap)])
+for n,row,col in zip(range(len(vel_interp)),xbin_pix,ybin_pix):
+    outgrid[row,col] = vel_interp[n]
+
+# Export maps to fits
+fits.writeto('/home/ben/Desktop/ngc1332_residuals/ngc1332_rbfcubic_mom1.fits', np.flipud(np.rot90(outgrid)), overwrite=True)
+
+# Find residuals and export map
+## Import unbinned map
+unbinned_map = np.rot90(np.fliplr(fits.open('/home/ben/Desktop/mom1_approx.fits')[0].data))
+## Find residuals
+residuals = np.abs(outgrid - unbinned_map)
+plt.imshow(residuals)
 plt.show()
+## Export residuals
+fits.writeto('/home/ben/Desktop/ngc1332_residuals/ngc1332_rbfcubic_mom1_residuals.fits', np.flipud(np.rot90(residuals)), overwrite=True)
 
 # Update values for kinemetry
 xbin = xbin_pix.copy()
 ybin = ybin_pix.copy()
 fluxbin = flux_interp
 velbin = vel_interp
+
+#################################################
+
+# # Interpolate (linear)
+# xyi = np.transpose(np.concatenate([[xbin],[ybin]]))
+# rbf_flux = interp.LinearNDInterpolator(xyi, fluxbin)
+# rbf_vel = interp.LinearNDInterpolator(xyi, velbin)
+# outxy = np.transpose(np.concatenate([[xbin_pix,ybin_pix]]))
+# flux_interp = rbf_flux(outxy)
+# vel_interp = rbf_vel(outxy)
+# 
+# # Plot to make sure it looks good
+# outgrid = np.zeros([len(velmap[0]),len(velmap)])
+# for n,row,col in zip(range(len(vel_interp)),xbin_pix,ybin_pix):
+#     outgrid[row,col] = vel_interp[n]
+# 
+# # Export maps to fits
+# fits.writeto('/home/ben/Desktop/ngc1332_residuals/ngc1332_linear_mom1.fits', np.flipud(np.rot90(outgrid)), overwrite=True)
+# 
+# # Find residuals and export map
+# ## Import unbinned map
+# unbinned_map = np.rot90(np.fliplr(fits.open('/home/ben/Desktop/mom1_approx.fits')[0].data))
+# ## Find residuals
+# residuals = np.abs(outgrid - unbinned_map)
+# plt.imshow(residuals)
+# plt.show()
+# ## Export residuals
+# fits.writeto('/home/ben/Desktop/ngc1332_residuals/ngc1332_linear_mom1_residuals.fits', np.flipud(np.rot90(residuals)), overwrite=True)
+# 
+# # Update values for kinemetry
+# xbin = xbin_pix.copy()
+# ybin = ybin_pix.copy()
+# fluxbin = flux_interp
+# velbin = vel_interp
+
+#################################################
+
+# # Interpolate (griddata)
+# xyi = np.transpose(np.concatenate([[xbin],[ybin]]))
+# outxy = np.transpose(np.concatenate([[xbin_pix,ybin_pix]]))
+# flux_interp = interp.griddata(xyi, fluxbin, outxy)
+# vel_interp = interp.griddata(xyi, velbin, outxy, method='linear')
+# 
+# # Plot to make sure it looks good
+# outgrid = np.zeros([len(velmap[0]),len(velmap)])
+# for n,row,col in zip(range(len(vel_interp)),xbin_pix,ybin_pix):
+#     outgrid[row,col] = vel_interp[n]
+# 
+# # Export maps to fits
+# fits.writeto('/home/ben/Desktop/ngc1332_residuals/ngc1332_gridlinear_mom1.fits', np.flipud(np.rot90(outgrid)), overwrite=True)
+# 
+# # Find residuals and export map
+# ## Import unbinned map
+# unbinned_map = np.rot90(np.fliplr(fits.open('/home/ben/Desktop/mom1_approx.fits')[0].data))
+# ## Find residuals
+# residuals = np.abs(outgrid - unbinned_map)
+# plt.imshow(residuals)
+# plt.show()
+# ## Export residuals
+# fits.writeto('/home/ben/Desktop/ngc1332_residuals/ngc1332_gridlinear_mom1_residuals.fits', np.flipud(np.rot90(residuals)), overwrite=True)
+# 
+# # Update values for kinemetry
+# xbin = xbin_pix.copy()
+# ybin = ybin_pix.copy()
+# fluxbin = flux_interp
+# velbin = vel_interp
+
+#################################################
+
+# # Krige
+# krig_flux = uk(xbin, ybin, fluxbin, variogram_model='hole-effect', enable_plotting=False, exact_values=True, pseudo_inv=True)
+# krig_vel = uk(xbin, ybin, velbin, variogram_model='exponential', exact_values=True)
+# krig_flux_points, sig = krig_flux.execute('points', xbin_pix.astype(float), ybin_pix.astype(float))
+# krig_vel_points, sig = krig_vel.execute('points', xbin_pix.astype(float), ybin_pix.astype(float))
+# 
+# # Plot to make sure it looks good
+# outgrid = np.zeros([len(velmap[0]),len(velmap)])
+# for n,row,col in zip(range(len(krig_vel_points)),xbin_pix,ybin_pix):
+#     outgrid[row,col] = krig_vel_points[n]
+# 
+# # Export maps to fits
+# fits.writeto('/home/ben/Desktop/ngc1332_residuals/ngc1332_krigeexp_mom1.fits', np.flipud(np.rot90(outgrid)), overwrite=True)
+# 
+# # Find residuals and export map
+# ## Import unbinned map
+# unbinned_map = np.rot90(np.fliplr(fits.open('/home/ben/Desktop/mom1_approx.fits')[0].data))
+# ## Find residuals
+# residuals = np.abs(outgrid - unbinned_map)
+# plt.imshow(residuals)
+# plt.show()
+# ## Export residuals
+# fits.writeto('/home/ben/Desktop/ngc1332_residuals/ngc1332_krigeexp_mom1_residuals.fits', np.flipud(np.rot90(residuals)), overwrite=True)
+# 
+# # Update values for kinemetry
+# xbin = xbin_pix.copy()
+# ybin = ybin_pix.copy()
+# fluxbin = krig_flux_points
+# velbin = krig_vel_points
 
 ##############################
 # Do the main kinemetry task #

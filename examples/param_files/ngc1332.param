@@ -9,7 +9,6 @@ scale=0.04
 cover=1.0
 plot=False
 verbose=True
-flux_cutoff=0.0013
 objname='ngc1332'
 saveloc='./examples/output/'
 saveplots=True
