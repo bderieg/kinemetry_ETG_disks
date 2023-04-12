@@ -110,7 +110,8 @@ def plot_kinemetry_profiles(k, scale):
     ax[3].set_ylabel('$k_5/k_1$', rotation='horizontal', ha='left')
     ax[3].set_box_aspect(0.5)
     ax[3].yaxis.set_label_position('right')
-    ax[3].set_ylim([min(k5k1)-0.1*(max(k5k1)-min(k5k1)), max(k5k1)+0.1*(max(k5k1)-min(k5k1))])
+    # ax[3].set_ylim([min(k5k1)-0.1*(max(k5k1)-min(k5k1)), max(k5k1)+0.1*(max(k5k1)-min(k5k1))])
+    ax[3].set_ylim([0.00, 0.04])
     ax[3].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[3].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
@@ -157,7 +158,7 @@ def plot_kinemetry_profiles(k, scale):
 #           bin values                                #
 #######################################################
 
-def plot_vlos_maps(xbin, ybin, velbin, k, value_mask=None):
+def plot_vlos_maps(xbin, ybin, velbin, k):
     # Get some values for plotting
     k0 = k.cf[:,0]
     k1 = np.sqrt(k.cf[:,1]**2 + k.cf[:,2]**2)
@@ -178,8 +179,6 @@ def plot_vlos_maps(xbin, ybin, velbin, k, value_mask=None):
     ax1.set_aspect(1)
     ax1.axis('off')
     plot_velfield(xbin, ybin, velbin-vsys, colorbar=False, nodots=True, vmin=mn, vmax=mx, zorder=1)
-    if value_mask is not None:
-        ax1.imshow(value_mask, alpha=value_mask, zorder=2, cmap='Greys', vmin=1, vmax=1e9)
 
     # Plot first-order fit
     ax2 = fig.add_subplot(gs[1], sharex=ax1, sharey=ax1)
@@ -187,8 +186,6 @@ def plot_vlos_maps(xbin, ybin, velbin, k, value_mask=None):
     ax2.set_aspect(1)
     ax2.axis('off')
     plot_velfield(xbin[model_mask], ybin[model_mask], k.velcirc[model_mask]-vsys, colorbar=False, nodots=True, vmin=mn, vmax=mx, zorder=1)
-    if value_mask is not None:
-        ax2.imshow(value_mask, alpha=value_mask, zorder=2, cmap='Greys', vmin=1, vmax=1e9)
 
     # Plot residuals
     ax3 = fig.add_subplot(gs[2], sharex=ax1, sharey=ax1)
@@ -196,8 +193,6 @@ def plot_vlos_maps(xbin, ybin, velbin, k, value_mask=None):
     ax3.set_aspect(1)
     ax3.axis('off')
     plot_velfield(xbin[model_mask], ybin[model_mask], list(map(lambda x,y:x-y,k.velcirc[model_mask],velbin[model_mask])), colorbar=False, nodots=True, vmin=mn, vmax=mx, zorder=1)
-    if value_mask is not None:
-        ax3.imshow(value_mask, alpha=value_mask, zorder=2, cmap='Greys', vmin=1, vmax=1e9)
 
     # Set title
     fig.suptitle('$v_{LOS}$', fontsize=15)

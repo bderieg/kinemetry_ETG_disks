@@ -35,17 +35,15 @@ def read_properties(filename):
 # Function to find centroid of a 2D list #
 ##########################################
 
-def centroid(img):
+def centroid(data):
     weighted_flux_x = 0.0
     weighted_flux_y = 0.0
     total_flux = 0.0
 
-    for row in range(len(img)):
-        for col in range(len(img[row])):
-            if img[row][col] == img[row][col]:
-                weighted_flux_x += col*img[row][col]
-                weighted_flux_y += row*img[row][col]
-                total_flux += img[row][col]
+    for i,row in data.iterrows():
+            weighted_flux_x += row['x (pix)']*row['mom0 (Jy/beam)']
+            weighted_flux_y += row['y (pix)']*row['mom0 (Jy/beam)']
+            total_flux += row['mom0 (Jy/beam)']
 
     xc = weighted_flux_x/total_flux
     yc = weighted_flux_y/total_flux

@@ -1259,7 +1259,7 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
                     plt.plot(pa_grid, q_grid, '.', c='k', ms=1)        
                     plt.xlabel('PA [deg]', fontweight='bold')
                     plt.ylabel('q', fontweight='bold')     
-                    plt.title('Grid fit for radius R=' + np.str(pr_rad))           
+                    plt.title('Grid fit for radius R=' + str(pr_rad))           
                     plt.tick_params(axis='both', which='both', top=True, right=True)
                     if paq is None:
                         plt.plot(pa_mpf, q_mpf, 'o', c='k')
@@ -1305,7 +1305,7 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
                     plt.plot(pa_grid, q_grid, '.', c='k', ms=1)        
                     plt.xlabel('PA [deg]', fontweight='bold')
                     plt.ylabel('q', fontweight='bold')     
-                    plt.title('Grid fit for radius=' + np.str(pr_rad))           
+                    plt.title('Grid fit for radius=' + str(pr_rad))           
                     plt.tick_params(axis='both', which='both', top=True, right=True)
                     if paq is None:
                         plt.plot(pa_mpf, q_mpf, 'o', c='k')
@@ -1354,7 +1354,7 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
                 plt.plot(pa_grid, q_grid, '.', c='k', ms=1)        
                 plt.xlabel('PA [deg]', fontweight='bold')
                 plt.ylabel('q', fontweight='bold')     
-                plt.title('Grid fit for radius R=' + np.str(pr_rad))           
+                plt.title('Grid fit for radius R=' + str(pr_rad))           
                 plt.tick_params(axis='both', which='both', top=True, right=True)
                 if paq is None:
                     plt.plot(pa_mpf, q_mpf, 'o', c='k')
