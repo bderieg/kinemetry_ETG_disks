@@ -68,6 +68,11 @@ param_filename = sys.argv[1]
 # Read file
 params = func.read_properties(param_filename)
 
+# Set variable to parameter file path (for relative paths in the parameter file)
+param_filepath = ''.join((param_filename.rpartition("/"))[:-1])
+if params['data_filename'][0] != "/":  # If it's not an absolute path
+    params['data_filename'] = param_filepath + params['data_filename']
+
 ###################################################
 # Fill params with default values if not explicit #
 ###################################################

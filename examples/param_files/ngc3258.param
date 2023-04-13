@@ -1,4 +1,4 @@
-data_filename=./examples/data/ngc3258/mom_bin_vals.csv
+data_filename=../data/ngc3258/mom_bin_vals.csv
 center_method='fc'
 rangeq=[0.5,1.0]
 rangepa=[45,90]
@@ -7,7 +7,7 @@ scale=0.04
 ring=0.25
 plot=True
 flux_cutoff=0.001
-saveloc='./examples/output/'
+saveloc='../output/'
 objname='ngc3258'
 verbose=True
 cover=.5

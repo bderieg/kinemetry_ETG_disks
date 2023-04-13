@@ -51,6 +51,9 @@ and the following other optional parameters
 
 See the existing parameter files as examples.
 
+### A note on file names
+For any of the keywords which specifies a filename, either an absolute path (starting with a "/") or a relative path from the location of the parameter file can be given.
+
 ## Running Kinemetry
 With parameter files specified, kinemetry can be run with
 ```

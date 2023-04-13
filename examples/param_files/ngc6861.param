@@ -1,4 +1,4 @@
-data_filename=./examples/data/ngc6861/mom_bin_vals.csv
+data_filename=../data/ngc6861/mom_bin_vals.csv
 center_method='free'
 ring=1.5
 rangeq=[0.02,1.0]
@@ -11,6 +11,6 @@ drad=2.5
 plot=False
 verbose=True
 objname='ngc6861'
-saveloc='./examples/output/'
+saveloc='../output/'
 saveplots=True
 savedata=True

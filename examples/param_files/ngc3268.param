@@ -1,4 +1,4 @@
-data_filename=./examples/data/ngc3268/mom_approx_bin_vals.csv
+data_filename=../data/ngc3268/mom_approx_bin_vals.csv
 ring=0.35
 center_method='free'
 rangeq=[0.4,1.0]
@@ -10,6 +10,6 @@ scale=0.04
 plot=False
 verbose=True
 objname='ngc3268'
-saveloc='./examples/output/'
+saveloc='../output/'
 saveplots=True
 savedata=True

@@ -1,4 +1,4 @@
-data_filename='./examples/data/ngc4429/mom_bin_vals.csv'
+data_filename='../data/ngc4429/mom_bin_vals.csv'
 ring=1.0
 drad=8.0
 center_method='fc'
@@ -9,6 +9,6 @@ cover=1.0
 plot=True
 verbose=True
 objname='ngc4429'
-saveloc='./examples/output/'
+saveloc='../output/'
 saveplots=True
 savedata=True
