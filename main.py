@@ -72,6 +72,7 @@ params = func.read_properties(param_filename)
 param_filepath = ''.join((param_filename.rpartition("/"))[:-1])
 if params['data_filename'][0] != "/":  # If it's not an absolute path
     params['data_filename'] = param_filepath + params['data_filename']
+    params['saveloc'] = param_filepath + params['saveloc']
 
 ###################################################
 # Fill params with default values if not explicit #
