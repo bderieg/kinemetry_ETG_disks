@@ -32,7 +32,7 @@ mpl.rcParams['axes.labelpad'] = 10
 #           kinemetry outputs                                #
 ##############################################################
 
-def plot_kinemetry_profiles(k, scale):
+def plot_kinemetry_profiles(k, scale, user_plot_lims={}):
 
     # Retrieve kinemetry outputs and calculate uncertainties
     radii = k.rad[:]*scale
@@ -76,13 +76,25 @@ def plot_kinemetry_profiles(k, scale):
     gs = fig.add_gridspec(4, hspace=0)
     ax = gs.subplots(sharex=True)
 
+    # Set default plot limits
+    plot_lims = {
+            "pa" : [min(pa)-0.1*(max(pa)-min(pa)), max(pa)+0.1*(max(pa)-min(pa))],
+            "q" : [min(q)-0.1*(max(q)-min(q)), max(q)+0.1*(max(q)-min(q))],
+            "k1" : [min(k1)-0.1*(max(k1)-min(k1)), max(k1)+0.1*(max(k1)-min(k1))],
+            "k5k1" : [0.00, 0.04]
+            }
+    ## Override with user limits
+    ### First remove None values from user dictionary
+    user_plot_lims = {key : value for key, value in user_plot_lims.items() if value is not None}
+    plot_lims |= user_plot_lims
+
     # Plot pa
     ax[0].errorbar(radii, pa, yerr=dpa, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     ax[0].set_ylabel('$\Gamma$ (deg)', rotation='horizontal', ha='right')
     ax[0].set_box_aspect(0.5)
     ax[0].set_xlim(left=0)
     ax[0].yaxis.tick_right()
-    ax[0].set_ylim([min(pa)-0.1*(max(pa)-min(pa)), max(pa)+0.1*(max(pa)-min(pa))])
+    ax[0].set_ylim(plot_lims["pa"])
     ax[0].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[0].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
@@ -91,7 +103,7 @@ def plot_kinemetry_profiles(k, scale):
     ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
     ax[1].set_box_aspect(0.5)
     ax[1].yaxis.set_label_position('right')
-    ax[1].set_ylim([min(q)-0.1*(max(q)-min(q)), max(q)+0.1*(max(q)-min(q))])
+    ax[1].set_ylim(plot_lims["q"])
     ax[1].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[1].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
@@ -100,7 +112,7 @@ def plot_kinemetry_profiles(k, scale):
     ax[2].set_ylabel('$k_1$ (km s$^{-1}$)', rotation='horizontal', ha='right')
     ax[2].set_box_aspect(0.5)
     ax[2].yaxis.tick_right()
-    ax[2].set_ylim([min(k1)-0.1*(max(k1)-min(k1)), max(k1)+0.1*(max(k1)-min(k1))])
+    ax[2].set_ylim(plot_lims["k1"])
     ax[2].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[2].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
@@ -110,19 +122,9 @@ def plot_kinemetry_profiles(k, scale):
     ax[3].set_ylabel('$k_5/k_1$', rotation='horizontal', ha='left')
     ax[3].set_box_aspect(0.5)
     ax[3].yaxis.set_label_position('right')
-    # ax[3].set_ylim([min(k5k1)-0.1*(max(k5k1)-min(k5k1)), max(k5k1)+0.1*(max(k5k1)-min(k5k1))])
-    ax[3].set_ylim([0.00, 0.04])
+    ax[3].set_ylim(plot_lims["k5k1"])
     ax[3].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[3].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
-
-    # # Plot v_sys 
-    # ax[4].errorbar(radii, k0, yerr=dk0, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
-    # ax[4].set_ylabel('$v_{sys}$ (km s$^{-1}$)', rotation='horizontal', ha='right')
-    # ax[4].set_box_aspect(0.5)
-    # ax[4].yaxis.tick_right()
-    # ax[4].set_ylim([min(k0)-0.1*(max(k0)-min(k0)), max(k0)+0.1*(max(k0)-min(k0))])
-    # ax[4].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
-    # ax[4].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
 
     fig.tight_layout()
 

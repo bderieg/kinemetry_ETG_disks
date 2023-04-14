@@ -33,6 +33,10 @@ default_params = {
         'even' : False,
         'cover' : 1,
         'plot' : True,
+        'plotlimspa' : None,
+        'plotlimsq' : None,
+        'plotlimsk1' : None,
+        'plotlimsk5k1' : None,
         'rangeq' : [0.2, 1.0],
         'rangepa' : [-90, 90],
         'nq' : 21,
@@ -143,9 +147,6 @@ interp_reg = Path(np.transpose([xbin, ybin]))
 inside_mask = interp_reg.contains_points(outxy, radius=params['extrap_pixels'])
 outxy = outxy[inside_mask]
 
-# Make mask of output grid for plotting
-
-
 # Interpolate (RBF)
 xyi = np.transpose(np.concatenate([[xbin],[ybin]]))
 rbf_flux = interp.RBFInterpolator(xyi, fluxbin, kernel='thin_plate_spline')
@@ -176,7 +177,13 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, #error=velbin_unc,
         )
 
 # Plot radial profiles
-radial_data = plotter.plot_kinemetry_profiles(k, params['scale'])
+radial_data = plotter.plot_kinemetry_profiles(k, params['scale'], 
+        user_plot_lims={
+            "pa":params["plotlimspa"],
+            "q":params["plotlimsq"],
+            "k1":params["plotlimsk1"],
+            "k5k1":params["plotlimsk5k1"]}
+        )
 if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_radial_profiles.png', dpi=1000)
 

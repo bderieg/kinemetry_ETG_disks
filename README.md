@@ -40,6 +40,14 @@ and the following other optional parameters
     - When interpolating, how far outside the data (in pixels) should be extrapolated?
 - objname
     - A string with the object name; used for file naming if 'save_loc' is set
+- plotlimspa
+    - A 2-element list (square brackets) with lower/upper y-limits for plotting the PA
+- plotlimsq
+    - Same as 'plotlimspa' but for q plot
+- plotlimsk1
+    - Same as 'plotlimspa' but for k1 plot
+- plotlimsk5k1
+    - Same as 'plotlimspa' but for k5/k1 plot
 - saveloc
     - A string containing a file save location (does not save anything by default; 'saveplots' and/or 'savedata' should also be set)
 - saveplots
