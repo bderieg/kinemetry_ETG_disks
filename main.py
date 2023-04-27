@@ -117,7 +117,7 @@ for item in dependencies['_MANDATORY']:
 ######################
 
 # Import dataframe
-moment_data = pd.read_csv(params['data_filename'], skiprows=8)
+moment_data = pd.read_csv(params['data_filename'], skiprows=9)
 
 # Find flux center if necessary
 if params['center_method'] != 'fixed':
