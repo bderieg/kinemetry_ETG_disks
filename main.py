@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
+from matplotlib.patches import PathPatch
 from plotbin.plot_velfield import plot_velfield
 import pandas as pd
 from astropy.io import fits
@@ -8,6 +9,7 @@ import regions
 from regions import Regions
 import scipy.interpolate as interp
 from pykrige.ok import OrdinaryKriging as uk
+from scipy.spatial import ConvexHull
 
 import kinemetry_scripts.kinemetry as kin
 import plotting_scripts as plotter
@@ -128,7 +130,7 @@ if params['center_method'] != 'fixed':
 below_cutoff = moment_data['mom0 (Jy/beam)'] < params['flux_cutoff']
 moment_data = moment_data[~below_cutoff]
 ## From bad_bins keyword
-moment_data.drop([x-10 for x in list(params['bad_bins'])], inplace=True)
+moment_data.drop([x-11 for x in list(params['bad_bins'])], inplace=True)
 
 xbin = moment_data['x (pix)'].values
 ybin = moment_data['y (pix)'].values
@@ -141,30 +143,41 @@ velbin_unc = moment_data['mom1unc (km/s)'].values
 #####################################
 
 # Make output grid
-outx, outy = np.meshgrid(np.arange(int(np.min(xbin)),int(np.max(xbin))), np.arange(int(np.min(ybin)),int(np.max(ybin))))
+outx, outy = np.meshgrid(
+        np.arange(int(np.min(xbin))-params['extrap_pixels'],int(np.max(xbin))+params['extrap_pixels']), 
+        np.arange(int(np.min(ybin))-params['extrap_pixels'],int(np.max(ybin))+params['extrap_pixels'])
+        )
 outxy = np.column_stack([outx.ravel(), outy.ravel()])
-interp_reg = Path(np.transpose([xbin, ybin]))
-inside_mask = interp_reg.contains_points(outxy, radius=params['extrap_pixels'])
+interp_points = np.column_stack([xbin.ravel(),ybin.ravel()])
+
+## Find the convex hull and make a mask for this
+interp_hull = ConvexHull(interp_points)
+hull_vert = interp_points[interp_hull.vertices]
+outer_path = Path(hull_vert, closed=True)
+inside_mask = outer_path.contains_points(outxy, radius=params['extrap_pixels'])
 outxy = outxy[inside_mask]
 
-# Interpolate (RBF)
+# Interpolate
 xyi = np.transpose(np.concatenate([[xbin],[ybin]]))
 rbf_flux = interp.RBFInterpolator(xyi, fluxbin, kernel='thin_plate_spline')
-rbf_vel = interp.RBFInterpolator(xyi, velbin, kernel='quintic')
+rbf_vel = interp.RBFInterpolator(xyi, velbin, kernel='thin_plate_spline')
+nn_velunc = interp.NearestNDInterpolator(xyi, velbin_unc)
 flux_interp = rbf_flux(outxy)
 vel_interp = rbf_vel(outxy)
+vel_unc_interp = nn_velunc(outxy)
 
 # Update values for kinemetry
 xbin = outxy[:,0]
 ybin = outxy[:,1]
 fluxbin = flux_interp
 velbin = vel_interp
+velbin_unc = vel_unc_interp
 
 ##############################
 # Do the main kinemetry task #
 ##############################
 
-k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, #error=velbin_unc,
+k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
         x0=params['x0'], y0=params['y0'],
         rangeQ=params['rangeq'], rangePA=params['rangepa'],
         nq=params['nq'], npa=params['npa'],
