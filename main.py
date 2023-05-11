@@ -117,6 +117,12 @@ for item in dependencies['_MANDATORY']:
 
 # Import dataframe
 moment_data = pd.read_csv(params['data_filename'], skiprows=9)
+# Import beam sizes
+moment_data_full = pd.read_csv(params['data_filename'], nrows=5)
+beam_major = moment_data_full.iloc[1,0]
+beam_minor = moment_data_full.iloc[2,0]
+beam_major = float(beam_major[beam_major.find(":")+1:])
+beam_minor = float(beam_minor[beam_minor.find(":")+1:])
 
 # Find flux center if necessary
 if params['center_method'] != 'fixed':
@@ -186,8 +192,25 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
         ring=params['ring']/params['scale'], verbose=params['verbose']
         )
 
+#########################################################
+# Get surface brightness profile with kinemetry results #
+#########################################################
+
+sbrad = np.logspace(np.log10(min(k.rad)), np.log10(max(k.rad)), num=20)
+sbq = np.mean(k.q) * np.ones_like(sbrad)
+sbpa = np.mean(k.pa) * np.ones_like(sbrad)
+
+sb = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin,
+        radius=sbrad, paq=np.array([np.mean(k.pa),np.mean(k.q)]),
+        x0=params['x0'], y0=params['y0'], fixcen=params['fixcen'],
+        plot=False)
+
+##########################
+# Plot and retrieve data #
+##########################
+
 # Plot radial profiles
-radial_data = plotter.plot_kinemetry_profiles(k, params['scale'], ref_pa=params['ref_pa'],
+radial_data = plotter.plot_kinemetry_profiles(k, params['scale'], ref_pa=params['ref_pa'], beam_size=np.sqrt(3600**2*beam_major*beam_minor),
         user_plot_lims={
             "pa":params["plotlimspa"],
             "q":params["plotlimsq"],
@@ -197,6 +220,11 @@ radial_data = plotter.plot_kinemetry_profiles(k, params['scale'], ref_pa=params[
 if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_radial_profiles.png', dpi=1000)
 
+# Plot surface brightness profile
+sb_data = plotter.plot_sb_profiles(sb, params['scale'])
+if (params['saveloc'] != 'none') and params['saveplots']:
+    plt.savefig(params['saveloc']+params['objname']+'_sb_profile.png', dpi=1000)
+
 # Plot v_los maps
 spatial_data = plotter.plot_vlos_maps(xbin, ybin, velbin, k)
 if (params['saveloc'] != 'none') and params['saveplots']:
@@ -205,11 +233,28 @@ if (params['saveloc'] != 'none') and params['saveplots']:
 # If not saving figures, just show
 if not params['saveloc']:
     plt.show()
-
 if params['saveloc'] and not (params['saveplots'] or params['savedata']):
     logging.warning('Save location set but nothing to save! Did you mean to set \'saveplots\' or \'savedata\'?')
 
-# Save data
+##############
+# Write data #
+##############
+
+# Save plot data
 if params['savedata']:
     radial_data.to_csv(params['saveloc']+params['objname']+'_radial_data.csv', index=True)
     spatial_data.to_csv(params['saveloc']+params['objname']+'_spatial_data.csv', index=False)
+
+# Save csv of kinemetry parameters
+k1 = np.sqrt(k.cf[:,1]**2 + k.cf[:,2]**2)
+kin_params = pd.DataFrame(
+        {
+            'range k1' : [max(k1)-min(k1)],
+            'average pa (deg)' : [np.mean(k.pa)],
+            'range pa (deg)' : [max(k.pa)-min(k.pa)],
+            'average q' : [np.mean(k.q)],
+            'range q' : [max(k.q)-min(k.q)],
+            'inclination (deg)' : [min(k.q)]
+        }
+    )
+kin_params.to_csv(params['saveloc']+params['objname']+'_kinemetry_parameters.csv', index=False)

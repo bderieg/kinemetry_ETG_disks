@@ -32,7 +32,7 @@ mpl.rcParams['axes.labelpad'] = 10
 #           kinemetry outputs                                #
 ##############################################################
 
-def plot_kinemetry_profiles(k, scale, ref_pa=None, user_plot_lims={}):
+def plot_kinemetry_profiles(k, scale, ref_pa=None, beam_size=None, user_plot_lims={}):
 
     # Retrieve kinemetry outputs and calculate uncertainties
     radii = k.rad[:]*scale
@@ -118,6 +118,12 @@ def plot_kinemetry_profiles(k, scale, ref_pa=None, user_plot_lims={}):
     ax[2].set_ylim(plot_lims["k1"])
     ax[2].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[2].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
+    ## Plot beam reference line if applicable
+    if beam_size is not None:
+        if np.arccos(min(q))*(180/np.pi) < 75:
+            ax[2].axvline(x=2*beam_size, color='blue', ls='dotted')
+        else:
+            ax[2].axvline(x=5*beam_size, color='blue', ls='dotted')
 
     # Plot k5k1
     ax[3].errorbar(radii, k5k1, yerr=dk5k1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
@@ -144,6 +150,46 @@ def plot_kinemetry_profiles(k, scale, ref_pa=None, user_plot_lims={}):
                     'dk5k1' : dk5k1,
                     'k0' : k0,
                     'dk0' : dk0
+                }
+            )
+    data.index = radii
+    data.index.name = 'radius'
+    return data
+
+##############################################################
+# Same as plot_kinemetry_profiles, but for mom 0 run         #
+##############################################################
+
+def plot_sb_profiles(k, scale):
+
+    # Retrieve kinemetry outputs and calculate uncertainties
+    radii = k.rad[:]*scale
+
+    ## surface brightness
+    sb = k.cf[:,0]
+    dsb = k.er_cf[:,0]
+
+    # Set up figure architecture
+    fig = plt.figure()
+    gs = fig.add_gridspec(1, hspace=0)
+    ax = gs.subplots(sharex=True)
+
+    # Plot sb
+    ax.errorbar(radii, sb, yerr=dsb, fmt='.k', markersize=15, linewidth=1, elinewidth=1.7)
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_ylabel('$\log_{10} I (Jy km s^{-1}$ beam$^{-1})$')
+    ax.set_ylim([min(sb)-0.1*(max(sb)-min(sb)),max(sb)+0.1*(max(sb)-min(sb))])
+    ax.set_box_aspect(0.5)
+    ax.set_xlabel('Radius (arcsec)')
+
+    fig.tight_layout()
+
+    # Fill data and return
+    data = pd.DataFrame(
+                {
+                    'sb' : sb,
+                    'dsb' : dsb
                 }
             )
     data.index = radii
