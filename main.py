@@ -4,11 +4,7 @@ from matplotlib.path import Path
 from matplotlib.patches import PathPatch
 from plotbin.plot_velfield import plot_velfield
 import pandas as pd
-from astropy.io import fits
-import regions
-from regions import Regions
 import scipy.interpolate as interp
-from pykrige.ok import OrdinaryKriging as uk
 from scipy.spatial import ConvexHull
 
 import kinemetry_scripts.kinemetry as kin
@@ -54,7 +50,8 @@ default_params = {
         'verbose' : False,
         'ring' : 0.0,
         'saveplots' : False,
-        'savedata' : False
+        'savedata' : False,
+        'ref_pa' : None
     }
 
 dependencies = {
@@ -190,7 +187,7 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
         )
 
 # Plot radial profiles
-radial_data = plotter.plot_kinemetry_profiles(k, params['scale'], 
+radial_data = plotter.plot_kinemetry_profiles(k, params['scale'], ref_pa=params['ref_pa'],
         user_plot_lims={
             "pa":params["plotlimspa"],
             "q":params["plotlimsq"],

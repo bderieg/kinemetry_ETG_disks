@@ -32,7 +32,7 @@ mpl.rcParams['axes.labelpad'] = 10
 #           kinemetry outputs                                #
 ##############################################################
 
-def plot_kinemetry_profiles(k, scale, user_plot_lims={}):
+def plot_kinemetry_profiles(k, scale, ref_pa=None, user_plot_lims={}):
 
     # Retrieve kinemetry outputs and calculate uncertainties
     radii = k.rad[:]*scale
@@ -97,6 +97,9 @@ def plot_kinemetry_profiles(k, scale, user_plot_lims={}):
     ax[0].set_ylim(plot_lims["pa"])
     ax[0].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[0].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
+    ## Plot reference pa if applicable
+    if ref_pa is not None:
+        ax[0].axhline(y=ref_pa, color='red', ls='dashed')
 
     # Plot q
     ax[1].errorbar(radii, q, yerr=dq, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
