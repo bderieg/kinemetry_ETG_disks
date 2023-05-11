@@ -52,6 +52,8 @@ and the following other optional parameters
     - A string containing a file save location (does not save anything by default; 'saveplots' and/or 'savedata' should also be set)
 - saveplots
     - If true, some kinemetry plots will be saved to the location specified by 'saveloc'
+- ref_pa
+    - Position angle at which to draw a horizontal red/dashed line
 - savedata
     - If true, some useful data will be saved in .csv format to the location specified by 'saveloc'
 - bad_bins
