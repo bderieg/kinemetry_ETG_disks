@@ -127,6 +127,8 @@ beam_minor = float(beam_minor[beam_minor.find(":")+1:])
 # Find flux center if necessary
 if params['center_method'] != 'fixed':
     params['x0'], params['y0'] = func.centroid(moment_data)
+## Do it anyway for SB plotting later
+fx0, fy0 = func.centroid(moment_data)
 
 # Remove bad bins
 ## From flux threshold
@@ -140,6 +142,7 @@ ybin = moment_data['y (pix)'].values
 velbin = moment_data['mom1 (km/s)'].values
 fluxbin = moment_data['mom0 (Jy/beam)'].values
 velbin_unc = moment_data['mom1unc (km/s)'].values
+fluxbin_unc = moment_data['mom0unc (Jy/beam)'].values
 
 #####################################
 # Interpolate between bin centroids #
@@ -165,9 +168,11 @@ xyi = np.transpose(np.concatenate([[xbin],[ybin]]))
 rbf_flux = interp.RBFInterpolator(xyi, fluxbin, kernel='thin_plate_spline')
 rbf_vel = interp.RBFInterpolator(xyi, velbin, kernel='thin_plate_spline')
 nn_velunc = interp.NearestNDInterpolator(xyi, velbin_unc)
+nn_fluxunc = interp.NearestNDInterpolator(xyi, fluxbin_unc)
 flux_interp = rbf_flux(outxy)
 vel_interp = rbf_vel(outxy)
 vel_unc_interp = nn_velunc(outxy)
+flux_unc_interp = nn_fluxunc(outxy)
 
 # Update values for kinemetry
 xbin = outxy[:,0]
@@ -175,6 +180,7 @@ ybin = outxy[:,1]
 fluxbin = flux_interp
 velbin = vel_interp
 velbin_unc = vel_unc_interp
+fluxbin_unc = flux_unc_interp
 
 ##############################
 # Do the main kinemetry task #
@@ -200,10 +206,10 @@ sbrad = np.logspace(np.log10(min(k.rad)), np.log10(max(k.rad)), num=20)
 sbq = np.mean(k.q) * np.ones_like(sbrad)
 sbpa = np.mean(k.pa) * np.ones_like(sbrad)
 
-sb = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin,
+sb = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin, error=fluxbin_unc,
         radius=sbrad, paq=np.array([np.mean(k.pa),np.mean(k.q)]),
-        x0=params['x0'], y0=params['y0'], fixcen=params['fixcen'],
-        plot=False)
+        x0=fx0, y0=fy0, fixcen=True,
+        plot=False, verbose=False)
 
 ##########################
 # Plot and retrieve data #

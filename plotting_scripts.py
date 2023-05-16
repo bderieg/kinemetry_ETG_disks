@@ -178,8 +178,8 @@ def plot_sb_profiles(k, scale):
     ax.errorbar(radii, sb, yerr=dsb, fmt='.k', markersize=15, linewidth=1, elinewidth=1.7)
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_ylabel('$\log_{10} I (Jy km s^{-1}$ beam$^{-1})$')
-    ax.set_ylim([min(sb)-0.1*(max(sb)-min(sb)),max(sb)+0.1*(max(sb)-min(sb))])
+    ax.set_ylabel('$\log_{10}$ I (Jy km s$^{-1}$ beam$^{-1})$')
+    ax.set_ylim([0.6*min(sb),1.5*max(sb)])
     ax.set_box_aspect(0.5)
     ax.set_xlabel('Radius (arcsec)')
 
