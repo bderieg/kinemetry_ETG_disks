@@ -12,3 +12,6 @@ objname='ngc1380'
 saveloc='../output/'
 saveplots=True
 savedata=True
+calc_mass=True
+distance=17.62
+redshift=0.00626

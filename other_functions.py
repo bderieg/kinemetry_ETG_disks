@@ -41,9 +41,9 @@ def centroid(data):
     total_flux = 0.0
 
     for i,row in data.iterrows():
-            weighted_flux_x += row['x (pix)']*row['mom0 (Jy/beam)']
-            weighted_flux_y += row['y (pix)']*row['mom0 (Jy/beam)']
-            total_flux += row['mom0 (Jy/beam)']
+            weighted_flux_x += row['x (pix)']*row['mom0 (Jy/pix km/s)']
+            weighted_flux_y += row['y (pix)']*row['mom0 (Jy/pix km/s)']
+            total_flux += row['mom0 (Jy/pix km/s)']
 
     xc = weighted_flux_x/total_flux
     yc = weighted_flux_y/total_flux

@@ -6,6 +6,7 @@ from plotbin.plot_velfield import plot_velfield
 import pandas as pd
 import scipy.interpolate as interp
 from scipy.spatial import ConvexHull
+import astropy.units as u
 
 import kinemetry_scripts.kinemetry as kin
 import plotting_scripts as plotter
@@ -51,12 +52,17 @@ default_params = {
         'ring' : 0.0,
         'saveplots' : False,
         'savedata' : False,
-        'ref_pa' : None
+        'ref_pa' : None,
+        'calc_mass' : False,
+        'distance' : None,
+        'redshift' : None
     }
 
 dependencies = {
         'saveplots' : [('saveloc', "\'saveplots\' specified but nothing will be saved because \'saveloc\' was not specified")],
         'savedata' : [('saveloc', "\'savedata\' specified but nothing will be saved because \'saveloc\' was not specified")],
+        'calc_mass' : [('distance', "\'calc_mass\' specified but no calculations can be done because \'distance\' was not specified"),
+            ('redshift', "\'calc_mass\' specified but no calculations can be done because \'redshift\' was not specified")],
         '_MANDATORY' : [(['data_filename'], "Could not perform kinemetry because no data file was specified")]
     }
 
@@ -116,13 +122,11 @@ for item in dependencies['_MANDATORY']:
 ######################
 
 # Import dataframe
-moment_data = pd.read_csv(params['data_filename'], skiprows=9)
-# Import beam sizes
-moment_data_full = pd.read_csv(params['data_filename'], nrows=5)
-beam_major = moment_data_full.iloc[1,0]
-beam_minor = moment_data_full.iloc[2,0]
-beam_major = float(beam_major[beam_major.find(":")+1:])
-beam_minor = float(beam_minor[beam_minor.find(":")+1:])
+moment_data = pd.read_csv(params['data_filename'], skiprows=11)
+# Import metadata
+moment_data_full = pd.read_csv(params['data_filename'], nrows=6)
+freq_obs = moment_data_full.iloc[4,0]
+freq_obs = float(freq_obs[freq_obs.find(":")+1:])
 
 # Find flux center if necessary
 if params['center_method'] != 'fixed':
@@ -132,17 +136,45 @@ fx0, fy0 = func.centroid(moment_data)
 
 # Remove bad bins
 ## From flux threshold
-below_cutoff = moment_data['mom0 (Jy/beam)'] < params['flux_cutoff']
+below_cutoff = moment_data['mom0 (Jy/pix km/s)'] < params['flux_cutoff']
 moment_data = moment_data[~below_cutoff]
 ## From bad_bins keyword
-moment_data.drop([x-11 for x in list(params['bad_bins'])], inplace=True)
+moment_data.drop([x-13 for x in list(params['bad_bins'])], inplace=True)
 
 xbin = moment_data['x (pix)'].values
 ybin = moment_data['y (pix)'].values
 velbin = moment_data['mom1 (km/s)'].values
-fluxbin = moment_data['mom0 (Jy/beam)'].values
+fluxbin = moment_data['mom0 (Jy/pix km/s)'].values
 velbin_unc = moment_data['mom1unc (km/s)'].values
-fluxbin_unc = moment_data['mom0unc (Jy/beam)'].values
+fluxbin_unc = moment_data['mom0unc (Jy/pix km/s)'].values
+
+binsize = moment_data['bin size (pix)'].values
+
+####################################
+# Find total brightness + gas mass #
+####################################
+
+# Find total intensity and uncertainty
+intensity = sum( [fb*bs for fb,bs in zip(fluxbin,binsize)] )
+intensity_stat_unc = np.sqrt(sum( [(fbu*bs)**2 for fbu,bs in zip(fluxbin_unc,binsize)] ))
+intensity_unc = np.sqrt( intensity_stat_unc**2 + (0.1*intensity)**2 )  # Add with absolute uncertainty
+
+# Find CO luminosity (Boizelle et al. 2017 eq. 1)
+if params['calc_mass'] and (params['redshift'] is not None) and (params['distance'] is not None):
+    distance = params['distance']
+    freq_obs = freq_obs*u.Hz.to(u.GHz)
+    lum_co21 = 3.25e7 * intensity * (distance**2) / ((1+params['redshift'])**3*freq_obs**2)
+
+# Convert to CO(1-0) luminosity
+lum_co10 = lum_co21 / 0.7
+
+# Find H2 mass
+alphaco = 3.1
+mass_H2 = alphaco * lum_co10
+
+# Find total gas mass
+f_He = 0.36
+mass_gas = mass_H2 * (1+f_He)
 
 #####################################
 # Interpolate between bin centroids #
