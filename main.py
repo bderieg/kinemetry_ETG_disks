@@ -66,6 +66,12 @@ dependencies = {
         '_MANDATORY' : [(['data_filename'], "Could not perform kinemetry because no data file was specified")]
     }
 
+transitions = {
+        'a' : 'CO(1-0)',
+        'b' : 'CO(2-1)',
+        'c' : 'CO(3-2)',
+    }
+
 ##################################
 # Attempt to read parameter file #
 ##################################
@@ -93,7 +99,7 @@ for key in default_params:
         params[key] = default_params[key]
     if key in dependencies:
         for item in dependencies[key]:
-            if item[0] not in original_params:
+            if item[0] not in original_params and key in original_params:
                 logging.warning(item[1])
 assert params['center_method'] in {'free', 'fixed', 'fc'}, "\'center_method\' argument value invalid"
 if params['center_method'] == 'free':
@@ -127,6 +133,15 @@ moment_data = pd.read_csv(params['data_filename'], skiprows=11)
 moment_data_full = pd.read_csv(params['data_filename'], nrows=6)
 freq_obs = moment_data_full.iloc[4,0]
 freq_obs = float(freq_obs[freq_obs.find(":")+1:])
+bmaj = moment_data_full.iloc[1,0]
+bmaj = float(bmaj[bmaj.find(":")+1:])
+bmin = moment_data_full.iloc[2,0]
+bmin = float(bmin[bmin.find(":")+1:])
+pix_scale = moment_data_full.iloc[0,0]
+pix_scale = float(pix_scale[pix_scale.find(":")+1:])
+
+beam_area_pix = 1.1331 * bmaj * bmin / pix_scale**2
+beam_area_arcsec = 1.1331 * bmaj * bmin * 3600**2
 
 # Find flux center if necessary
 if params['center_method'] != 'fixed':
@@ -159,22 +174,41 @@ intensity = sum( [fb*bs for fb,bs in zip(fluxbin,binsize)] )
 intensity_stat_unc = np.sqrt(sum( [(fbu*bs)**2 for fbu,bs in zip(fluxbin_unc,binsize)] ))
 intensity_unc = np.sqrt( intensity_stat_unc**2 + (0.1*intensity)**2 )  # Add with absolute uncertainty
 
-# Find CO luminosity (Boizelle et al. 2017 eq. 1)
 if params['calc_mass'] and (params['redshift'] is not None) and (params['distance'] is not None):
+
+    # Find CO luminosity (Boizelle et al. 2017 eq. 1)
     distance = params['distance']
     freq_obs = freq_obs*u.Hz.to(u.GHz)
-    lum_co21 = 3.25e7 * intensity * (distance**2) / ((1+params['redshift'])**3*freq_obs**2)
+    lum_trans = 3.25e7 * intensity * (distance**2) / ((1+params['redshift'])**3*freq_obs**2)
 
-# Convert to CO(1-0) luminosity
-lum_co10 = lum_co21 / 0.7
+    # Convert to CO(1-0) luminosity
+    ## Get user input for line
+    rco = 0.0
+    print(' ')
+    print('Here\'s a list of transitions:')
+    print(' ')
+    for key in transitions:
+        print('\t'+key+" : "+transitions[key])
+    print(' ')
+    trans_select = input('Select a transition with the corresponding number (for gas mass estimate) : ')
+    print(' ')
+    ## Convert this to an R value
+    if trans_select.lower() == "a":
+        rco = 1.0
+    elif trans_select.lower() == "b":
+        rco = 0.7
+    elif trans_select.lower() == "c":
+        rco = 0.49
+    ## Convert luminosity
+    lum_co10 = lum_trans / rco
 
-# Find H2 mass
-alphaco = 3.1
-mass_H2 = alphaco * lum_co10
+    # Find H2 mass
+    alphaco = 3.1
+    mass_H2 = alphaco * lum_co10
 
-# Find total gas mass
-f_He = 0.36
-mass_gas = mass_H2 * (1+f_He)
+    # Find total gas mass
+    f_He = 0.36
+    mass_gas = mass_H2 * (1+f_He)
 
 #####################################
 # Interpolate between bin centroids #
@@ -248,7 +282,7 @@ sb = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin, error=fluxbin_unc,
 ##########################
 
 # Plot radial profiles
-radial_data = plotter.plot_kinemetry_profiles(k, params['scale'], ref_pa=params['ref_pa'], beam_size=np.sqrt(3600**2*beam_major*beam_minor),
+radial_data = plotter.plot_kinemetry_profiles(k, params['scale'], ref_pa=params['ref_pa'], beam_size=beam_area_arcsec,
         user_plot_lims={
             "pa":params["plotlimspa"],
             "q":params["plotlimsq"],
@@ -283,16 +317,19 @@ if params['savedata']:
     radial_data.to_csv(params['saveloc']+params['objname']+'_radial_data.csv', index=True)
     spatial_data.to_csv(params['saveloc']+params['objname']+'_spatial_data.csv', index=False)
 
-# Save csv of kinemetry parameters
-k1 = np.sqrt(k.cf[:,1]**2 + k.cf[:,2]**2)
-kin_params = pd.DataFrame(
-        {
-            'range k1' : [max(k1)-min(k1)],
-            'average pa (deg)' : [np.mean(k.pa)],
-            'range pa (deg)' : [max(k.pa)-min(k.pa)],
-            'average q' : [np.mean(k.q)],
-            'range q' : [max(k.q)-min(k.q)],
-            'inclination (deg)' : [min(k.q)]
-        }
-    )
-kin_params.to_csv(params['saveloc']+params['objname']+'_kinemetry_parameters.csv', index=False)
+    # Save csv of kinemetry parameters
+    kin_params = pd.DataFrame(
+            {
+                'range k1' : [max(radial_data['k1'])-min(radial_data['k1'])],
+                'max k1' : [max(radial_data['k1'])],
+                'average k5k1' : [np.mean(radial_data['k5k1'])],
+                'average pa (deg)' : [np.mean(radial_data['pa'])],
+                'range pa (deg)' : [max(radial_data['pa'])-min(radial_data['pa'])],
+                'average q' : [np.mean(radial_data['q'])],
+                'range q' : [max(radial_data['q'])-min(radial_data['q'])],
+                'inclination (deg)' : [min(radial_data['q'])],
+                'luminosity (K km/s pc^2)' : [lum_trans],
+                'gas mass (solar masses)' : [mass_gas]
+            }
+        )
+    kin_params.to_csv(params['saveloc']+params['objname']+'_kinemetry_parameters.csv', index=False)
