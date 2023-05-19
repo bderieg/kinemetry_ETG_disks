@@ -55,6 +55,7 @@ default_params = {
         'ref_pa' : None,
         'calc_mass' : False,
         'distance' : None,
+        'distance_unc' : None,
         'redshift' : None
     }
 
@@ -178,8 +179,10 @@ if params['calc_mass'] and (params['redshift'] is not None) and (params['distanc
 
     # Find CO luminosity (Boizelle et al. 2017 eq. 1)
     distance = params['distance']
+    distance_unc = params['distance_unc'] if params['distance_unc'] is not None else 0.0
     freq_obs = freq_obs*u.Hz.to(u.GHz)
     lum_trans = 3.25e7 * intensity * (distance**2) / ((1+params['redshift'])**3*freq_obs**2)
+    lum_trans_unc = lum_trans * np.sqrt( ( intensity_unc / intensity )**2 + ( 2*distance_unc/distance )**2 )
 
     # Convert to CO(1-0) luminosity
     ## Get user input for line
@@ -190,7 +193,7 @@ if params['calc_mass'] and (params['redshift'] is not None) and (params['distanc
     for key in transitions:
         print('\t'+key+" : "+transitions[key])
     print(' ')
-    trans_select = input('Select a transition with the corresponding number (for gas mass estimate) : ')
+    trans_select = input('Select a transition with the corresponding letter (for gas mass estimate) : ')
     print(' ')
     ## Convert this to an R value
     if trans_select.lower() == "a":
@@ -201,14 +204,17 @@ if params['calc_mass'] and (params['redshift'] is not None) and (params['distanc
         rco = 0.49
     ## Convert luminosity
     lum_co10 = lum_trans / rco
+    lum_co10_unc = lum_trans_unc / rco
 
     # Find H2 mass
     alphaco = 3.1
     mass_H2 = alphaco * lum_co10
+    mass_H2_unc = alphaco * lum_co10_unc
 
     # Find total gas mass
     f_He = 0.36
     mass_gas = mass_H2 * (1+f_He)
+    mass_gas_unc = mass_H2_unc * (1+f_He)
 
 #####################################
 # Interpolate between bin centroids #
@@ -318,18 +324,36 @@ if params['savedata']:
     spatial_data.to_csv(params['saveloc']+params['objname']+'_spatial_data.csv', index=False)
 
     # Save csv of kinemetry parameters
+    k1 = list(radial_data['k1'])
+    dk1 = list(radial_data['dk1'])
+    pa = list(radial_data['pa'])
+    dpa = list(radial_data['dpa'])
+    q = list(radial_data['q'])
+    dq = list(radial_data['dq'])
+    k5k1 = list(radial_data['k5k1'])
+    dk5k1 = list(radial_data['dk5k1'])
     kin_params = pd.DataFrame(
             {
-                'range k1' : [max(radial_data['k1'])-min(radial_data['k1'])],
-                'max k1' : [max(radial_data['k1'])],
-                'average k5k1' : [np.mean(radial_data['k5k1'])],
-                'average pa (deg)' : [np.mean(radial_data['pa'])],
-                'range pa (deg)' : [max(radial_data['pa'])-min(radial_data['pa'])],
-                'average q' : [np.mean(radial_data['q'])],
-                'range q' : [max(radial_data['q'])-min(radial_data['q'])],
-                'inclination (deg)' : [min(radial_data['q'])],
+                'range k1 (km/s)' : [max(k1)-min(k1)],
+                'range k1 uncertainty (km/s)' : [ np.sqrt( dk1[np.argmax(k1)]**2 + dk1[np.argmin(k1)]**2 ) ],
+                'max k1 (km/s)' : [max(k1)],
+                'max k1 uncertainty (km/s)' : [dk1[np.argmax(k1)]],
+                'average k5k1' : [np.mean(k5k1)],
+                'average k5k1 uncertainty' : [ np.sqrt(sum( [ kk**2 for kk in k5k1 ] )) ],
+                'average pa (deg)' : [np.mean(pa)],
+                'average pa uncertainty (deg)' : [ np.sqrt(sum( [ p**2 for p in pa ] )) ],
+                'range pa (deg)' : [max(pa)-min(pa)],
+                'range pa uncertainty (deg)' : [ np.sqrt( dpa[np.argmax(pa)]**2 + dpa[np.argmin(pa)]**2 ) ],
+                'average q' : [np.mean(q)],
+                'average q uncertainty' : [ np.sqrt(sum( [ qq**2 for qq in q ] )) ],
+                'range q' : [max(q)-min(q)],
+                'range q uncertainty' : [ np.sqrt( dq[np.argmax(q)]**2 + dq[np.argmin(q)]**2 ) ],
+                'inclination (deg)' : [min(q)],
+                'inclination uncertainty (deg)' : [dq[np.argmin(min(q))]],
                 'luminosity (K km/s pc^2)' : [lum_trans],
-                'gas mass (solar masses)' : [mass_gas]
+                'luminosity uncertainty (K km/s pc^2)' : [lum_trans_unc],
+                'gas mass (M_sol)' : [mass_gas],
+                'gas mass uncertainty (M_sol)' : [mass_gas_unc]
             }
         )
     kin_params.to_csv(params['saveloc']+params['objname']+'_kinemetry_parameters.csv', index=False)
