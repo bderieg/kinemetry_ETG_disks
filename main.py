@@ -23,7 +23,6 @@ import logging
 default_params = {
         'data_filename' : None,
         'ntrm' : 6,
-        'scale' : 1,
         'center_method' : 'free',
         'x0' : 0,
         'y0' : 0,
@@ -140,6 +139,9 @@ bmin = moment_data_full.iloc[2,0]
 bmin = float(bmin[bmin.find(":")+1:])
 pix_scale = moment_data_full.iloc[0,0]
 pix_scale = float(pix_scale[pix_scale.find(":")+1:])
+
+pix_to_arcsec = pix_scale * 3600
+pix_to_parsec = pix_to_arcsec * params['distance']*u.Mpc.to(u.pc) * np.pi / 180 / 3600
 
 beam_area_pix = 1.1331 * bmaj * bmin / pix_scale**2
 beam_area_arcsec = 1.1331 * bmaj * bmin * 3600**2
@@ -267,7 +269,7 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
         allterms=params['allterms'], even=params['even'],
         cover=params['cover'], plot=params['plot'],
         vsys=params['vsys'], drad=params['drad'],
-        ring=params['ring']/params['scale'], verbose=params['verbose']
+        ring=params['ring']/pix_to_arcsec, verbose=params['verbose']
         )
 
 #########################################################
@@ -288,7 +290,7 @@ sb = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin, error=fluxbin_unc,
 ##########################
 
 # Plot radial profiles
-radial_data = plotter.plot_kinemetry_profiles(k, params['scale'], ref_pa=params['ref_pa'], beam_size=beam_area_arcsec,
+radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec, ref_pa=params['ref_pa'], beam_size=beam_area_arcsec,
         user_plot_lims={
             "pa":params["plotlimspa"],
             "q":params["plotlimsq"],
@@ -299,7 +301,7 @@ if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_radial_profiles.png', dpi=1000)
 
 # Plot surface brightness profile
-sb_data = plotter.plot_sb_profiles(sb, params['scale'])
+sb_data = plotter.plot_sb_profiles(sb, pix_to_arcsec, pix_to_parsec)
 if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_sb_profile.png', dpi=1000)
 

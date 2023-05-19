@@ -16,4 +16,5 @@ saveplots=True
 savedata=True
 calc_mass=True
 distance=28.05
+distance_unc=5.06
 redshift=0.00944
