@@ -167,14 +167,14 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, beam_size=None, u
 # Same as plot_kinemetry_profiles, but for mom 0 run         #
 ##############################################################
 
-def plot_sb_profiles(k, scale, phys_scale):
+def plot_sb_profiles(k, intensity_to_mass, beam_area_pix, scale, phys_scale):
 
     # Retrieve kinemetry outputs and calculate uncertainties
     radii = k.rad[:]*scale
 
     ## surface brightness
-    sb = k.cf[:,0]
-    dsb = k.er_cf[:,0]
+    sb = k.cf[:,0] * beam_area_pix
+    dsb = k.er_cf[:,0] * beam_area_pix
 
     # Set up figure architecture
     fig = plt.figure()
@@ -182,25 +182,38 @@ def plot_sb_profiles(k, scale, phys_scale):
     ax = gs.subplots(sharex=True)
 
     # Plot sb
-    ax.errorbar(radii, sb, yerr=dsb, fmt='.k', markersize=15, linewidth=1, elinewidth=1.7)
+    ax.errorbar(radii, sb, yerr=dsb, fmt='sk', markersize=5, linewidth=1, elinewidth=1.7)
     ax.set_xscale('log')
     ax.set_yscale('log')
-    ax.set_ylabel('$\log_{10}$ Intensity (Jy km s$^{-1}$)')
-    ax.set_ylim([0.6*min(sb),1.5*max(sb)])
-    ax.set_box_aspect(0.5)
-    ax.set_xlabel('$\log_{10}$ Radius (arcsec)')
-    ax.xaxis.set_major_locator(ticker.LogLocator(base=10, numticks=10))
+    ax.set_ylabel('$\log_{10}$ I/A$_\mathrm{beam}$ (Jy km s$^{-1}$ beam$^{-1}$)')
+    ax.set_box_aspect(1.0)
+    ax.set_xlabel('$\log_{10}$ R (arcsec)')
+    ax.autoscale()
+    ax.xaxis.set_major_locator(ticker.LogLocator(base=10))
+    ax.xaxis.set_minor_formatter(lambda x,pos : None)
     ax.xaxis.set_major_formatter(lambda x,pos : int(np.log10(x)))
-    ax.yaxis.set_major_locator(ticker.LogLocator(base=10, numticks=10))
+    ax.yaxis.set_major_locator(ticker.LogLocator(base=10))
+    ax.yaxis.set_minor_formatter(lambda y,pos : None)
     ax.yaxis.set_major_formatter(lambda y,pos : int(np.log10(y)))
+
+    ## Plot gas surface density scale on right
+    axdensity = ax.twinx()
+    axdensity.set_box_aspect(1.0)
+    axdensity.set_ylabel('$\log_{10}$ $\Sigma\'_{\\mathrm{gas}}$ (M$_\\odot$ pc$^{-2}$)')
+    axdensity.set_yscale('log')
+    axdensity.autoscale()
+    axdensity.yaxis.set_major_locator(ticker.LogLocator(base=10))
+    axdensity.yaxis.set_minor_formatter(lambda y,pos : None)
+    axdensity.yaxis.set_major_formatter(lambda y,pos : int(np.log10(y)))
 
     ## Plot physical scale on top
     axphys = ax.twiny()
-    axphys.set_box_aspect(0.5)
-    axphys.set_xlabel('$\log_{10}$ Radius (pc)')
-    axphys.set_xlim([i*phys_scale/scale for i in ax.get_xlim()])
+    axphys.set_box_aspect(1.0)
+    axphys.set_xlabel('$\log_{10}$ R (pc)')
     axphys.set_xscale('log')
-    axphys.xaxis.set_major_locator(ticker.LogLocator(base=10, numticks=10))
+    axphys.autoscale()
+    axphys.xaxis.set_major_locator(ticker.LogLocator(base=10))
+    axphys.xaxis.set_minor_formatter(lambda x,pos : None)
     axphys.xaxis.set_major_formatter(lambda x,pos : int(np.log10(x)))
 
     fig.tight_layout()

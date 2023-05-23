@@ -13,3 +13,6 @@ verbose=True
 cover=.5
 saveplots=True
 savedata=True
+distance=32.06
+distance_unc=4.25
+redshift=0.0096

@@ -218,6 +218,9 @@ if params['calc_mass'] and (params['redshift'] is not None) and (params['distanc
     mass_gas = mass_H2 * (1+f_He)
     mass_gas_unc = mass_H2_unc * (1+f_He)
 
+    # Encapsulate this in one multiplicative factor
+    intensity_to_mass = (1+f_He) * alphaco / rco * 3.25e7 * distance**2 / ((1+params['redshift'])**3*freq_obs**2)
+
 #####################################
 # Interpolate between bin centroids #
 #####################################
@@ -276,7 +279,7 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
 # Get surface brightness profile with kinemetry results #
 #########################################################
 
-sbrad = np.logspace(np.log10(min(k.rad)), np.log10(max(k.rad)), num=20)
+sbrad = np.logspace(np.log10(max(k.rad)/22), np.log10(max(k.rad)), num=20, base=10)
 sbq = np.mean(k.q) * np.ones_like(sbrad)
 sbpa = np.mean(k.pa) * np.ones_like(sbrad)
 
@@ -301,7 +304,7 @@ if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_radial_profiles.png', dpi=1000)
 
 # Plot surface brightness profile
-sb_data = plotter.plot_sb_profiles(sb, pix_to_arcsec, pix_to_parsec)
+sb_data = plotter.plot_sb_profiles(sb, intensity_to_mass, beam_area_pix, pix_to_arcsec, pix_to_parsec)
 if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_sb_profile.png', dpi=1000)
 
