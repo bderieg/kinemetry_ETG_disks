@@ -32,7 +32,7 @@ mpl.rcParams['axes.labelpad'] = 10
 #           kinemetry outputs                                #
 ##############################################################
 
-def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, beam_size=None, user_plot_lims={}):
+def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_size=None, user_plot_lims={}):
 
     # Retrieve kinemetry outputs and calculate uncertainties
     radii = k.rad[:]*scale
@@ -105,8 +105,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, beam_size=None, u
     axphys = ax[0].twiny()
     axphys.set_box_aspect(0.5)
     axphys.set_xlabel('Radius (pc)')
-    axphys.set_xlim([i*phys_scale/scale for i in ax[0].get_xlim()])
-    axphys.xaxis.set_major_locator(ticker.MultipleLocator(50))
+    axphys.set_xlim([i/scale*phys_scale for i in ax[0].get_xlim()])
+    axphys.xaxis.set_major_locator(ticker.MaxNLocator(4))
 
     # Plot q
     ax[1].errorbar(radii, q, yerr=dq, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
@@ -116,6 +116,9 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, beam_size=None, u
     ax[1].set_ylim(plot_lims["q"])
     ax[1].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[1].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
+    ## Plot reference q if applicable
+    if ref_q is not None:
+        ax[1].axhline(y=ref_q, color='red', ls='dashed')
 
     # Plot k1
     ax[2].errorbar(radii, k1, yerr=dk1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
@@ -211,6 +214,7 @@ def plot_sb_profiles(k, intensity_to_mass, beam_area_pix, scale, phys_scale):
     axphys.set_box_aspect(1.0)
     axphys.set_xlabel('$\log_{10}$ R (pc)')
     axphys.set_xscale('log')
+    axphys.set_xlim([i/scale*phys_scale for i in ax.get_xlim()])
     axphys.autoscale()
     axphys.xaxis.set_major_locator(ticker.LogLocator(base=10))
     axphys.xaxis.set_minor_formatter(lambda x,pos : None)

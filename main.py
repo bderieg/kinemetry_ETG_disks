@@ -11,6 +11,7 @@ import astropy.units as u
 import kinemetry_scripts.kinemetry as kin
 import plotting_scripts as plotter
 import other_functions as func
+import read_properties as rp
 
 import sys
 import warnings
@@ -47,22 +48,17 @@ default_params = {
         'bad_bins' : [],
         'saveloc' : 'none',
         'objname' : 'noname',
+        'linename' : 'noline',
         'verbose' : False,
         'ring' : 0.0,
         'saveplots' : False,
         'savedata' : False,
-        'ref_pa' : None,
         'calc_mass' : False,
-        'distance' : None,
-        'distance_unc' : None,
-        'redshift' : None
     }
 
 dependencies = {
         'saveplots' : [('saveloc', "\'saveplots\' specified but nothing will be saved because \'saveloc\' was not specified")],
         'savedata' : [('saveloc', "\'savedata\' specified but nothing will be saved because \'saveloc\' was not specified")],
-        'calc_mass' : [('distance', "\'calc_mass\' specified but no calculations can be done because \'distance\' was not specified"),
-            ('redshift', "\'calc_mass\' specified but no calculations can be done because \'redshift\' was not specified")],
         '_MANDATORY' : [(['data_filename'], "Could not perform kinemetry because no data file was specified")]
     }
 
@@ -122,6 +118,16 @@ for item in dependencies['_MANDATORY']:
     if not any([itr in original_params for itr in item[0]]):
         logging.warning(item[1])
         exit()
+
+#################################
+# Add in spreadsheet parameters #
+#################################
+
+params['distance'] = rp.get_prop(params['objname'],'D_L (Mpc)')
+params['distance_unc'] = rp.get_prop(params['objname'],'D_L Unc.')
+params['redshift'] = rp.get_prop(params['objname'],'Redshift (via NED)')
+params['ref_pa'] = rp.get_prop(params['objname'],'Stellar PA (deg)')
+params['ref_q'] = rp.get_prop(params['objname'],'Stellar Flattening')
 
 ######################
 # Import moment data #
@@ -293,7 +299,7 @@ sb = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin, error=fluxbin_unc,
 ##########################
 
 # Plot radial profiles
-radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec, ref_pa=params['ref_pa'], beam_size=beam_area_arcsec,
+radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec, ref_pa=params['ref_pa'], ref_q=params['ref_q'], beam_size=beam_area_arcsec,
         user_plot_lims={
             "pa":params["plotlimspa"],
             "q":params["plotlimsq"],
@@ -301,17 +307,17 @@ radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec, r
             "k5k1":params["plotlimsk5k1"]}
         )
 if (params['saveloc'] != 'none') and params['saveplots']:
-    plt.savefig(params['saveloc']+params['objname']+'_radial_profiles.png', dpi=1000)
+    plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_radial_profiles.png', dpi=1000)
 
 # Plot surface brightness profile
 sb_data = plotter.plot_sb_profiles(sb, intensity_to_mass, beam_area_pix, pix_to_arcsec, pix_to_parsec)
 if (params['saveloc'] != 'none') and params['saveplots']:
-    plt.savefig(params['saveloc']+params['objname']+'_sb_profile.png', dpi=1000)
+    plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_sb_profile.png', dpi=1000)
 
 # Plot v_los maps
 spatial_data = plotter.plot_vlos_maps(xbin, ybin, velbin, k)
 if (params['saveloc'] != 'none') and params['saveplots']:
-    plt.savefig(params['saveloc']+params['objname']+'_velocity_maps.png', dpi=1000)
+    plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_velocity_maps.png', dpi=1000)
 
 # If not saving figures, just show
 if not params['saveloc']:
@@ -325,8 +331,8 @@ if params['saveloc'] and not (params['saveplots'] or params['savedata']):
 
 # Save plot data
 if params['savedata']:
-    radial_data.to_csv(params['saveloc']+params['objname']+'_radial_data.csv', index=True)
-    spatial_data.to_csv(params['saveloc']+params['objname']+'_spatial_data.csv', index=False)
+    radial_data.to_csv(params['saveloc']+params['objname']+'_'+params['linename']+'_radial_data.csv', index=True)
+    spatial_data.to_csv(params['saveloc']+params['objname']+'_'+params['linename']+'_spatial_data.csv', index=False)
 
     # Save csv of kinemetry parameters
     k1 = list(radial_data['k1'])
@@ -361,4 +367,4 @@ if params['savedata']:
                 'gas mass uncertainty (M_sol)' : [mass_gas_unc]
             }
         )
-    kin_params.to_csv(params['saveloc']+params['objname']+'_kinemetry_parameters.csv', index=False)
+    kin_params.to_csv(params['saveloc']+params['objname']+'_'+params['linename']+'_kinemetry_parameters.csv', index=False)
