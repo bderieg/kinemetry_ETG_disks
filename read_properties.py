@@ -16,7 +16,7 @@ prefixes = [
         "WISEA"
         ]
 
-properties = pd.read_csv('/home/ben/Desktop/research/research_boizelle_working/kinemetry/galaxy_properties.csv', index_col=0)
+properties = pd.read_csv('/home/ben/Desktop/research/research_boizelle_working/ap_phot_data/galaxy_properties.csv', index_col=0)
 
 for key,data in properties.iterrows():
     if any([True if p in key else False for p in prefixes]):

@@ -163,7 +163,12 @@ fx0, fy0 = func.centroid(moment_data)
 below_cutoff = moment_data['mom0 (Jy/pix km/s)'] < params['flux_cutoff']
 moment_data = moment_data[~below_cutoff]
 ## From bad_bins keyword
-moment_data.drop([x-13 for x in list(params['bad_bins'])], inplace=True)
+if type(params['bad_bins']) is int:
+    moment_data.drop(int(params['bad_bins'])-13, inplace=True)
+else:
+    moment_data.drop([x-13 for x in list(params['bad_bins'])], inplace=True)
+
+print(moment_data)
 
 xbin = moment_data['x (pix)'].values
 ybin = moment_data['y (pix)'].values
@@ -361,6 +366,8 @@ if params['savedata']:
                 'range q uncertainty' : [ np.sqrt( dq[np.argmax(q)]**2 + dq[np.argmin(q)]**2 ) ],
                 'inclination (deg)' : [min(q)],
                 'inclination uncertainty (deg)' : [dq[np.argmin(min(q))]],
+                'intensity (Jy km/s)' : [intensity],
+                'intensity uncertainty (Jy km/s)' : [intensity_unc],
                 'luminosity (K km/s pc^2)' : [lum_trans],
                 'luminosity uncertainty (K km/s pc^2)' : [lum_trans_unc],
                 'gas mass (M_sol)' : [mass_gas],
