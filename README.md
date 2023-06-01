@@ -40,6 +40,8 @@ and the following other optional parameters
     - When interpolating, how far outside the data (in pixels) should be extrapolated?
 - objname
     - A string with the object name; used for file naming if 'save_loc' is set
+- linename
+    - A string with the transition name; used for file naming if 'save_loc' is set (e.g., 'CO21')
 - plotlimspa
     - A 2-element list (square brackets) with lower/upper y-limits for plotting the PA
 - plotlimsq
@@ -52,8 +54,8 @@ and the following other optional parameters
     - A string containing a file save location (does not save anything by default; 'saveplots' and/or 'savedata' should also be set)
 - saveplots
     - If true, some kinemetry plots will be saved to the location specified by 'saveloc'
-- ref_pa
-    - Position angle at which to draw a horizontal red/dashed line
+- calc_mass
+    - If true, a file is output with line intensity, luminosity, derived gas mass, etc.
 - savedata
     - If true, some useful data will be saved in .csv format to the location specified by 'saveloc'
 - bad_bins
