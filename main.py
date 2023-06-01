@@ -168,8 +168,6 @@ if type(params['bad_bins']) is int:
 else:
     moment_data.drop([x-13 for x in list(params['bad_bins'])], inplace=True)
 
-print(moment_data)
-
 xbin = moment_data['x (pix)'].values
 ybin = moment_data['y (pix)'].values
 velbin = moment_data['mom1 (km/s)'].values
