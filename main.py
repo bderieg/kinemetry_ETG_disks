@@ -160,7 +160,7 @@ fx0, fy0 = func.centroid(moment_data)
 
 # Remove bad bins
 ## From flux threshold
-below_cutoff = moment_data['mom0 (Jy/pix km/s)'] < params['flux_cutoff']
+below_cutoff = moment_data['mom0 (Jy/pix km/s)'] <= params['flux_cutoff']
 moment_data = moment_data[~below_cutoff]
 ## From bad_bins keyword
 if type(params['bad_bins']) is int:
