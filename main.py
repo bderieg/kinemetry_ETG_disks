@@ -7,6 +7,7 @@ import pandas as pd
 import scipy.interpolate as interp
 from scipy.spatial import ConvexHull
 import astropy.units as u
+import json
 
 import kinemetry_scripts.kinemetry as kin
 import plotting_scripts as plotter
@@ -126,8 +127,18 @@ for item in dependencies['_MANDATORY']:
 params['distance'] = rp.get_prop(params['objname'],'D_L (Mpc)')
 params['distance_unc'] = rp.get_prop(params['objname'],'D_L Unc.')
 params['redshift'] = rp.get_prop(params['objname'],'Redshift (via NED)')
-params['ref_pa'] = rp.get_prop(params['objname'],'Stellar PA (deg)')
-params['ref_q'] = rp.get_prop(params['objname'],'Stellar Flattening')
+pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/ap_phot_data/pa_data.json'))
+q_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/ap_phot_data/q_data.json'))
+if params['objname'] in pa_data:
+    params['ref_pa'] = pa_data[params['objname']]
+else:
+    params['ref_pa'] = 1e4
+if params['objname'] in q_data:
+    params['ref_q'] = q_data[params['objname']]
+else:
+    params['ref_q'] = 1e4
+# params['ref_pa'] = rp.get_prop(params['objname'],'Stellar PA (deg)')
+# params['ref_q'] = rp.get_prop(params['objname'],'Stellar Flattening')
 
 ######################
 # Import moment data #
@@ -373,3 +384,37 @@ if params['savedata']:
             }
         )
     kin_params.to_csv(params['saveloc']+params['objname']+'_'+params['linename']+'_kinemetry_parameters.csv', index=False)
+
+    # Save also to a json with all the kinemetry parameters
+    alldata = {}
+    try:
+        alldata = json.load(open(params['saveloc']+'all_parameters.json'))
+    except FileNotFoundError:
+        print(' ')
+        print("kinemetry parameters file not found . . . creating a new one here")
+    alldata[params['objname']] = {
+                'range k1 (km/s)' : max(k1)-min(k1),
+                'range k1 uncertainty (km/s)' : np.sqrt( dk1[np.argmax(k1)]**2 + dk1[np.argmin(k1)]**2 ),
+                'max k1 (km/s)' : max(k1),
+                'max k1 uncertainty (km/s)' : dk1[np.argmax(k1)],
+                'average k5k1' : np.mean(k5k1),
+                'average k5k1 uncertainty' : np.sqrt(sum( [ kk**2 for kk in k5k1 ] )),
+                'average pa (deg)' : np.mean(pa),
+                'average pa uncertainty (deg)' : np.sqrt(sum( [ p**2 for p in pa ] )),
+                'range pa (deg)' : max(pa)-min(pa),
+                'range pa uncertainty (deg)' : np.sqrt( dpa[np.argmax(pa)]**2 + dpa[np.argmin(pa)]**2 ),
+                'average q' : np.mean(q),
+                'average q uncertainty' : np.sqrt(sum( [ qq**2 for qq in q ] )),
+                'range q' : max(q)-min(q),
+                'range q uncertainty' : np.sqrt( dq[np.argmax(q)]**2 + dq[np.argmin(q)]**2 ),
+                'inclination (deg)' : min(q),
+                'inclination uncertainty (deg)' : dq[np.argmin(min(q))],
+                'intensity (Jy km/s)' : intensity,
+                'intensity uncertainty (Jy km/s)' : intensity_unc,
+                'luminosity (K km/s pc^2)' : lum_trans,
+                'luminosity uncertainty (K km/s pc^2)' : lum_trans_unc,
+                'gas mass (M_sol)' : mass_gas,
+                'gas mass uncertainty (M_sol)' : mass_gas_unc
+            }
+    kp_outfile = open(params['saveloc']+'all_parameters.json', 'w')
+    json.dump(alldata, kp_outfile, indent=5)
