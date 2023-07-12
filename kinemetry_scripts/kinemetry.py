@@ -505,6 +505,10 @@ import matplotlib.ticker
 import matplotlib as mpl
 mpl.rcParams['xtick.direction'] = 'in'
 mpl.rcParams['ytick.direction'] = 'in'
+
+import sys
+sys.path.insert(0, './kinemetry_scripts')
+import kin_mcmc as kmc
     
 #used for debugging
 #import pdb #use with pdb.set_trace() 
@@ -763,7 +767,7 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
              npa=21, nq=21, rangeQ=None, rangePA=None, allterms=False, 
              even=False, bmodel=True, ring=None, radius=None, cover=0.75, 
              plot=True, verbose=True, nogrid=False, fixcen=True, badpix=None,
-             sky=None, vsys=None, drad=1, incrad=1.0): 
+             sky=None, vsys=None, drad=1, incrad=1.0, mcmc=False): 
 
     ## Defining the Result Class ================================
     class Results :
@@ -831,6 +835,7 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
         yellip = np.zeros(1)#np.array([])
         eccano = np.zeros(1)#np.zeros([])
         ex_mom = np.zeros(1)#np.zeros([])
+        ex_mom_er = np.zeros(1)#np.zeros([])
         vv = np.zeros(1)#np.array([])
         vrec = np.zeros(1)#np.array([])
     else:
@@ -839,6 +844,7 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
             yellip =np.zeros(1)
             eccano = np.zeros(1)
             ex_mom = np.zeros(1)
+            ex_mom_er = np.zeros(1)
             vv =np.zeros(1)
             vrec =np.zeros(1)
             xellip[0] = x0
@@ -852,6 +858,7 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
             yellip = ybin[ww]
             eccano = np.zeros(1)
             ex_mom = np.zeros(1)
+            ex_mom_er = np.zeros(1)
             vv = moment[ww]
             vrec = moment[ww]
     
@@ -1215,6 +1222,7 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
         yellip = np.concatenate([yellip,yell[w]])
         eccano = np.concatenate([eccano, theta[w]])
         ex_mom = np.concatenate([ex_mom, momEll])
+        ex_mom_er = np.concatenate([ex_mom_er, er_momEll])
         vrec = np.concatenate([vrec, momFit])
         if even:
             vv = np.concatenate([vv, coeff[0]+ 0*coeff[2]*np.cos(theta[w])])
@@ -1412,6 +1420,7 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
         vrec = vrec[1:]
         eccano = eccano[1:]
         ex_mom = ex_mom[1:]
+        ex_mom_er = ex_mom_er[1:]
 
 
 
@@ -1460,6 +1469,33 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
         velcirc = vv
         velkin = vrec
         gascirc = vvF # disabled as its ellipse (xellipF, yellipF) parameters are not the same the main outouts (xellip, yellip)
+
+    ###############################
+    # Emcee analysis of pa, q, k1 #
+    ###############################
+
+    if mcmc:
+        lo_ind = 0
+        hi_ind = 0
+        emcee_results = []
+        for itr in range(len(rad)):
+            hi_ind += int(nelem[itr])
+            if itr >= 0:
+                lo_ind += int(nelem[itr-1])
+            emcee_results.append(kmc.mcmc_full_run(
+                        eccano[lo_ind:hi_ind], 
+                        ex_mom[lo_ind:hi_ind],
+                        ex_mom_er[lo_ind:hi_ind],
+                        {
+                            'pa' : pa[itr],
+                            'q' : q[itr],
+                            'k1' : (np.sqrt(cf[:,1]**2 + cf[:,2]**2))[itr]
+                        },
+                        {},
+                        200,
+                        1000
+                    ))
+
         
     #==========================================================================
     #adding relevant arrays into structure

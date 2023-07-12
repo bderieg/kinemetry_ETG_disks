@@ -39,8 +39,8 @@ default_params = {
         'plotlimsk5k1' : None,
         'rangeq' : [0.2, 1.0],
         'rangepa' : [-90, 90],
-        'nq' : 21,
-        'npa' : 21,
+        'nq' : 40,
+        'npa' : 40,
         'vsys' : None,
         'drad' : 1,
         'extrap_pixels' : 0.0,
@@ -127,18 +127,18 @@ for item in dependencies['_MANDATORY']:
 params['distance'] = rp.get_prop(params['objname'],'D_L (Mpc)')
 params['distance_unc'] = rp.get_prop(params['objname'],'D_L Unc.')
 params['redshift'] = rp.get_prop(params['objname'],'Redshift (via NED)')
-pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/ap_phot_data/pa_data.json'))
-q_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/ap_phot_data/q_data.json'))
-if params['objname'] in pa_data:
-    params['ref_pa'] = pa_data[params['objname']]
-else:
-    params['ref_pa'] = 1e4
-if params['objname'] in q_data:
-    params['ref_q'] = q_data[params['objname']]
-else:
-    params['ref_q'] = 1e4
-# params['ref_pa'] = rp.get_prop(params['objname'],'Stellar PA (deg)')
-# params['ref_q'] = rp.get_prop(params['objname'],'Stellar Flattening')
+# pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/ap_phot_data/pa_data.json'))
+# q_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/ap_phot_data/q_data.json'))
+# if params['objname'] in pa_data:
+#     params['ref_pa'] = pa_data[params['objname']]
+# else:
+#     params['ref_pa'] = 1e4
+# if params['objname'] in q_data:
+#     params['ref_q'] = q_data[params['objname']]
+# else:
+#     params['ref_q'] = 1e4
+params['ref_pa'] = rp.get_prop(params['objname'],'Stellar PA (deg)')
+params['ref_q'] = rp.get_prop(params['objname'],'Stellar Flattening')
 
 ######################
 # Import moment data #
@@ -292,7 +292,8 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
         allterms=params['allterms'], even=params['even'],
         cover=params['cover'], plot=params['plot'],
         vsys=params['vsys'], drad=params['drad'],
-        ring=params['ring']/pix_to_arcsec, verbose=params['verbose']
+        ring=params['ring']/pix_to_arcsec, verbose=params['verbose'],
+        mcmc=True
         )
 
 #########################################################
