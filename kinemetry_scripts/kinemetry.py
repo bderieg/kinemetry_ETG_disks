@@ -509,6 +509,7 @@ mpl.rcParams['ytick.direction'] = 'in'
 import sys
 sys.path.insert(0, './kinemetry_scripts')
 import kin_mcmc as kmc
+from tqdm.auto import tqdm
     
 #used for debugging
 #import pdb #use with pdb.set_trace() 
@@ -877,6 +878,12 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
     er_xc = np.zeros(nrad)
     er_yc = np.zeros(nrad)
     nelem = np.zeros(nrad)
+    pa_sp = np.zeros(nrad)
+    q_sp = np.zeros(nrad)
+    k1_sp = np.zeros(nrad)
+    pa_md = np.zeros(nrad)
+    q_md = np.zeros(nrad)
+    k1_md = np.zeros(nrad)
         
     #
     #  Initialize parameters for MPFIT in ODD case
@@ -1470,33 +1477,60 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
         velkin = vrec
         gascirc = vvF # disabled as its ellipse (xellipF, yellipF) parameters are not the same the main outouts (xellip, yellip)
 
+
     ###############################
     # Emcee analysis of pa, q, k1 #
     ###############################
 
     if mcmc:
+        
+        progbar_mcmc = tqdm(range(len(rad)+1), desc="Running MCMC", leave=False)
+
+        pa_sp = []
+        q_sp = []
+        k1_sp = []
+        pa_md = []
+        q_md = []
+        k1_md = []
+        
         lo_ind = 0
         hi_ind = 0
-        emcee_results = []
         for itr in range(len(rad)):
             hi_ind += int(nelem[itr])
             if itr >= 0:
                 lo_ind += int(nelem[itr-1])
-            emcee_results.append(kmc.mcmc_full_run(
-                        eccano[lo_ind:hi_ind], 
-                        ex_mom[lo_ind:hi_ind],
-                        ex_mom_er[lo_ind:hi_ind],
+            emcee_results = kmc.mcmc_full_run(
+                        interp,
+                        er_interp,
                         {
                             'pa' : pa[itr],
                             'q' : q[itr],
-                            'k1' : (np.sqrt(cf[:,1]**2 + cf[:,2]**2))[itr]
+                            'k1' : (np.sqrt(cf[:,1]**2 + cf[:,2]**2))[itr],
+                            'radius' : rad[itr],
+                            'x0' : np.mean(xc),
+                            'y0' : np.mean(yc),
+                            'a0' : cf[itr,0]
                         },
-                        {},
+                        {
+                            'pa_uplim' : 360,
+                            'pa_lolim' : 0,
+                            'q_uplim' : 1.0,
+                            'q_lolim' : 0.0,
+                            'k1_uplim' : 2000.0,
+                            'k1_lolim' : 0.0
+                        },
                         200,
                         1000
-                    ))
+                    )
+            pa_sp.append(emcee_results['pa_spread'])
+            q_sp.append(emcee_results['q_spread'])
+            k1_sp.append(emcee_results['k1_spread'])
+            pa_md.append(emcee_results['pa_median'])
+            q_md.append(emcee_results['q_median'])
+            k1_md.append(emcee_results['k1_median'])
+            progbar_mcmc.update(1)
+            
 
-        
     #==========================================================================
     #adding relevant arrays into structure
     #==========================================================================
@@ -1529,6 +1563,13 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
         results.sky = sky       # passing the value of the sky keyword
     if ring:
         results.ring = ring     # passing the value of the ring keyword
+
+    results.pa_sp = np.array(pa_sp)
+    results.q_sp = np.array(q_sp)
+    results.k1_sp = np.array(k1_sp)
+    results.pa_md = np.array(pa_md)
+    results.q_md = np.array(q_md)
+    results.k1_md = np.array(k1_md)
 
 #    pdb.set_trace()    
     return results

@@ -89,7 +89,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
     plot_lims |= user_plot_lims
 
     # Plot pa
-    ax[0].errorbar(radii, pa, yerr=dpa, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    ax[0].errorbar(radii, pa, yerr=dpa, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
+    ax[0].fill_between(radii, k.pa_md-k.pa_sp, k.pa_md+k.pa_sp, fc='lightgray', zorder=0)
     ax[0].set_ylabel('$\Gamma$ (deg)', rotation='horizontal', ha='right')
     ax[0].set_box_aspect(0.5)
     ax[0].set_xlim(left=0)
@@ -109,7 +110,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
     axphys.xaxis.set_major_locator(ticker.MaxNLocator(4))
 
     # Plot q
-    ax[1].errorbar(radii, q, yerr=dq, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    ax[1].errorbar(radii, q, yerr=dq, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
+    ax[1].fill_between(radii, k.q_md-k.q_sp, k.q_md+k.q_sp, fc='lightgray', zorder=0)
     ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
     ax[1].set_box_aspect(0.5)
     ax[1].yaxis.set_label_position('right')
@@ -121,7 +123,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
         ax[1].axhline(y=ref_q, color='red', ls='dashed')
 
     # Plot k1
-    ax[2].errorbar(radii, k1, yerr=dk1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    ax[2].errorbar(radii, k1, yerr=dk1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
+    ax[2].fill_between(radii, k.k1_md-k.k1_sp, k.k1_md+k.k1_sp, fc='lightgray', zorder=0)
     ax[2].set_ylabel('$k_1$ (km s$^{-1}$)', rotation='horizontal', ha='right')
     ax[2].set_box_aspect(0.5)
     ax[2].yaxis.tick_right()
