@@ -23,7 +23,7 @@ import logging
 # Define global constants #
 ###########################
 default_params = {
-        'data_filename' : None,
+        'dataloc' : None,
         'ntrm' : 6,
         'center_method' : 'free',
         'x0' : 0,
@@ -55,12 +55,13 @@ default_params = {
         'saveplots' : False,
         'savedata' : False,
         'calc_mass' : False,
+        'mcmc' : False
     }
 
 dependencies = {
         'saveplots' : [('saveloc', "\'saveplots\' specified but nothing will be saved because \'saveloc\' was not specified")],
         'savedata' : [('saveloc', "\'savedata\' specified but nothing will be saved because \'saveloc\' was not specified")],
-        '_MANDATORY' : [(['data_filename'], "Could not perform kinemetry because no data file was specified")]
+        '_MANDATORY' : [(['dataloc'], "Could not perform kinemetry because no data location was specified")]
     }
 
 transitions = {
@@ -82,9 +83,12 @@ params = func.read_properties(param_filename)
 
 # Set variable to parameter file path (for relative paths in the parameter file)
 param_filepath = ''.join((param_filename.rpartition("/"))[:-1])
-if params['data_filename'][0] != "/":  # If it's not an absolute path
-    params['data_filename'] = param_filepath + params['data_filename']
+if params['dataloc'][0] != "/":  # If it's not an absolute path
+    params['dataloc'] = param_filepath + params['dataloc']
     params['saveloc'] = param_filepath + params['saveloc']
+if params['dataloc'][-1] != "/":
+    params['dataloc'] += "/"
+params['data_filename'] = params['dataloc'] + 'mom_bin_vals.csv'
 
 ###################################################
 # Fill params with default values if not explicit #
@@ -137,23 +141,27 @@ params['redshift'] = rp.get_prop(params['objname'],'Redshift (via NED)')
 #     params['ref_q'] = q_data[params['objname']]
 # else:
 #     params['ref_q'] = 1e4
-params['ref_pa'] = rp.get_prop(params['objname'],'Stellar PA (deg)')
-params['ref_q'] = rp.get_prop(params['objname'],'Stellar Flattening')
+# params['ref_pa'] = rp.get_prop(params['objname'],'Stellar PA (deg)')
+# params['ref_q'] = rp.get_prop(params['objname'],'Stellar Flattening')
+params['ref_pa'] = 500
+params['ref_q'] = -1.0
 
 ######################
 # Import moment data #
 ######################
 
 # Import dataframe
-moment_data = pd.read_csv(params['data_filename'], skiprows=11)
+moment_data = pd.read_csv(params['data_filename'], skiprows=12)
 # Import metadata
-moment_data_full = pd.read_csv(params['data_filename'], nrows=6)
-freq_obs = moment_data_full.iloc[4,0]
+moment_data_full = pd.read_csv(params['data_filename'], nrows=7)
+freq_obs = moment_data_full.iloc[5,0]
 freq_obs = float(freq_obs[freq_obs.find(":")+1:])
 bmaj = moment_data_full.iloc[1,0]
 bmaj = float(bmaj[bmaj.find(":")+1:])
 bmin = moment_data_full.iloc[2,0]
 bmin = float(bmin[bmin.find(":")+1:])
+bpa = moment_data_full.iloc[3,0]
+bpa = float(bpa[bpa.find(":")+1:])
 pix_scale = moment_data_full.iloc[0,0]
 pix_scale = float(pix_scale[pix_scale.find(":")+1:])
 
@@ -175,7 +183,7 @@ below_cutoff = moment_data['mom0 (Jy/pix km/s)'] <= params['flux_cutoff']
 moment_data = moment_data[~below_cutoff]
 ## From bad_bins keyword
 if type(params['bad_bins']) is int:
-    moment_data.drop(int(params['bad_bins'])-13, inplace=True)
+    moment_data.drop(int(params['bad_bins'])-14, inplace=True)
 else:
     moment_data.drop([x-13 for x in list(params['bad_bins'])], inplace=True)
 
@@ -293,7 +301,7 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
         cover=params['cover'], plot=params['plot'],
         vsys=params['vsys'], drad=params['drad'],
         ring=params['ring']/pix_to_arcsec, verbose=params['verbose'],
-        mcmc=True
+        mcmc=params['mcmc']
         )
 
 #########################################################
@@ -333,6 +341,17 @@ if (params['saveloc'] != 'none') and params['saveplots']:
 spatial_data = plotter.plot_vlos_maps(xbin, ybin, velbin, k)
 if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_velocity_maps.png', dpi=1000)
+    
+# Plot summary sheet
+summary = plotter.plot_summary(k, pix_to_arcsec, pix_to_parsec, params['dataloc'], ref_pa=params['ref_pa'], ref_q=params['ref_q'], beam_size=beam_area_arcsec, bmin=bmin/pix_scale, bmaj=bmaj/pix_scale, bpa=bpa,
+        user_plot_lims={
+            "pa":params["plotlimspa"],
+            "q":params["plotlimsq"],
+            "k1":params["plotlimsk1"],
+            "k5k1":params["plotlimsk5k1"]}
+        )
+if (params['saveloc'] != 'none') and params['saveplots']:
+    plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_summary.png', dpi=1000)
 
 # If not saving figures, just show
 if not params['saveloc']:

@@ -6,8 +6,8 @@ import corner
 def mcmc_full_run(mominterp, mominterp_err, fitparams, priors, nwalkers, niter):
 
     # Define the initial theta array
-    theta = np.array([ fitparams['pa'], fitparams['q'], fitparams['k1'] ])
-    # theta = np.array([ fitparams['pa'], fitparams['q'] ])
+    # theta = np.array([ fitparams['pa'], fitparams['q'], fitparams['k1'] ])
+    theta = np.array([ fitparams['pa'], fitparams['q'] ])
 
     # Define stepping methodology
     ndim = len(theta)
@@ -29,8 +29,8 @@ def mcmc_full_run(mominterp, mominterp_err, fitparams, priors, nwalkers, niter):
     pa_median = np.median(theta_dist[:,0],axis=0)
     q_spread = np.std(theta_dist[:,1],axis=0)
     q_median = np.median(theta_dist[:,1],axis=0)
-    k1_spread = np.std(theta_dist[:,2],axis=0)
-    k1_median = np.median(theta_dist[:,2],axis=0)
+    # k1_spread = np.std(theta_dist[:,2],axis=0)
+    # k1_median = np.median(theta_dist[:,2],axis=0)
 
     # Show corner plot for reference
     # cp_labels = ['PA (deg)','Q','$k_1$ (km s$^{-1}$)']
@@ -49,9 +49,9 @@ def mcmc_full_run(mominterp, mominterp_err, fitparams, priors, nwalkers, niter):
             'pa_spread' : pa_spread, 
             'pa_median' : pa_median, 
             'q_spread' : q_spread, 
-            'q_median' : q_median, 
-            'k1_spread' : k1_spread,
-            'k1_median' : k1_median
+            'q_median' : q_median#, 
+            # 'k1_spread' : k1_spread,
+            # 'k1_median' : k1_median
         }
 
 
@@ -77,8 +77,8 @@ def lnlike(theta, mominterp, mominterp_err, fitparams):
     momEll_err = mominterp_err(xEll, yEll)
 
     # Calculate residuals
-    LnLike = -0.5*np.sum( ( (momEll-fitparams['a0']-theta[2]*np.cos(th_list)) / momEll_err )**2 )
-    # LnLike = -0.5*np.sum( ( (momEll-fitparams['a0']-fitparams['k1']*np.cos(th_list)) / momEll_err )**2 )
+    # LnLike = -0.5*np.sum( ( (momEll-fitparams['a0']-theta[2]*np.cos(th_list)) / momEll_err )**2 )
+    LnLike = -0.5*np.sum( ( (momEll-fitparams['a0']-fitparams['k1']*np.cos(th_list)) / momEll_err )**2 )
 
     return LnLike
 
@@ -89,9 +89,9 @@ def lnprior(theta, priors):
             theta[0] < priors['pa_uplim'],
             theta[0] > priors['pa_lolim'],
             theta[1] < priors['q_uplim'],
-            theta[1] > priors['q_lolim'],
-            theta[2] < priors['k1_uplim'],
-            theta[2] > priors['k1_lolim']
+            theta[1] > priors['q_lolim']#,
+            # theta[2] < priors['k1_uplim'],
+            # theta[2] > priors['k1_lolim']
         ]
 
     if np.all(prior_test):

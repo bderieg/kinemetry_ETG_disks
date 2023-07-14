@@ -1482,16 +1482,16 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
     # Emcee analysis of pa, q, k1 #
     ###############################
 
+    pa_sp = []
+    q_sp = []
+    k1_sp = []
+    pa_md = []
+    q_md = []
+    k1_md = []
+
     if mcmc:
         
         progbar_mcmc = tqdm(range(len(rad)+1), desc="Running MCMC", leave=False)
-
-        pa_sp = []
-        q_sp = []
-        k1_sp = []
-        pa_md = []
-        q_md = []
-        k1_md = []
         
         lo_ind = 0
         hi_ind = 0
@@ -1524,10 +1524,10 @@ def kinemetry(xbin=None, ybin=None, moment=None, img=None, x0=0., y0=0.,
                     )
             pa_sp.append(emcee_results['pa_spread'])
             q_sp.append(emcee_results['q_spread'])
-            k1_sp.append(emcee_results['k1_spread'])
+            # k1_sp.append(emcee_results['k1_spread'])
             pa_md.append(emcee_results['pa_median'])
             q_md.append(emcee_results['q_median'])
-            k1_md.append(emcee_results['k1_median'])
+            # k1_md.append(emcee_results['k1_median'])
             progbar_mcmc.update(1)
             
 
