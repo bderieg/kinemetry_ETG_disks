@@ -20,9 +20,11 @@ mpl.rcParams['xtick.direction'] = 'in'
 mpl.rcParams['ytick.direction'] = 'in'
 mpl.rcParams['xtick.top'] = True
 mpl.rcParams['xtick.bottom'] = True
-mpl.rcParams['xtick.labelsize'] = 'small'
-mpl.rcParams['ytick.labelsize'] = 'small'
-mpl.rcParams['axes.labelpad'] = 10
+mpl.rcParams['xtick.labelsize'] = 7.
+mpl.rcParams['ytick.labelsize'] = 7.
+mpl.rcParams['axes.labelsize'] = 8.
+mpl.rcParams['axes.labelpad'] = 7.
+mpl.rcParams['axes.titlesize'] = 8.
 
 ##############################################################
 # Function to plot radial profiles based on kinemetry output #
@@ -214,16 +216,18 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     dk5k1 = np.abs(k5k1) * np.sqrt((dk1/k1)**2 + (dk5/k5)**2)
 
     # Set up figure architecture
-    fig = plt.figure()
-    subfigs = fig.subfigures(1, 2, wspace=-0.05, width_ratios=[1.,1.])
+    fig = plt.figure(figsize=(8,5))
+    subfigs = fig.subfigures(1, 2, wspace=-0.05, width_ratios=[1.,1.2])
     gs0 = subfigs[0].add_gridspec(4, hspace=0)
     rad_ax = gs0.subplots(sharex=True)
     radial_ratio = 0.7
-    subfigs_right = subfigs[1].subfigures(2, 1, hspace=0.0, height_ratios=[1.,1.])
+    subfigs_right = subfigs[1].subfigures(3, 1, hspace=0.0, height_ratios=[1.,1.,0.5])
     gsmaps = subfigs_right[0].add_gridspec(1, 3, wspace=0)
     maps_ax = gsmaps.subplots(sharey=True)
-    histmaps = subfigs_right[1].add_gridspec(1, 2, wspace=0.2)
+    histmaps = subfigs_right[1].add_gridspec(1, 2, wspace=0.8)
     hist_ax = histmaps.subplots()
+    textgs = subfigs_right[2].add_gridspec(1)
+    text_ax = textgs.subplots()
 
     # Set default plot limits
     plot_lims = {
@@ -263,9 +267,9 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     rad_ax[1].errorbar(radii, q, yerr=dq, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
     if len(k.pa_sp) > 0:
         rad_ax[1].fill_between(radii, k.q_md-k.q_sp, k.q_md+k.q_sp, fc='lightgray', zorder=0)
-    rad_ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
+    rad_ax[1].set_ylabel('$q$', rotation='horizontal', ha='right')
     rad_ax[1].set_box_aspect(radial_ratio)
-    rad_ax[1].yaxis.set_label_position('right')
+    rad_ax[1].yaxis.tick_right()
     rad_ax[1].set_ylim(plot_lims["q"])
     rad_ax[1].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     rad_ax[1].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
@@ -293,9 +297,9 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     # Plot k5k1
     rad_ax[3].errorbar(radii, k5k1, yerr=dk5k1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     rad_ax[3].set_xlabel('Radius (arcsec)')
-    rad_ax[3].set_ylabel('$k_5/k_1$', rotation='horizontal', ha='left')
+    rad_ax[3].set_ylabel('$k_5/k_1$', rotation='horizontal', ha='right')
     rad_ax[3].set_box_aspect(radial_ratio)
-    rad_ax[3].yaxis.set_label_position('right')
+    rad_ax[3].yaxis.tick_right()
     rad_ax[3].set_ylim(plot_lims["k5k1"])
     rad_ax[3].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     rad_ax[3].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
@@ -306,14 +310,14 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     mom1map = np.flipud(fits.open(dataloc+'mom1_binned.fits')[0].data)
     mom2map = np.flipud(fits.open(dataloc+'mom2_binned.fits')[0].data)
 
+    ## Import colormaps
     cmap0 = plt.cm.get_cmap('bone')
     cmap0.set_under('white')
-
     cmap1 = plt.cm.get_cmap('sauron')
     cmap1.set_under('white')
 
     ## Show moment 0
-    maps_ax[0].imshow(
+    mom0plot = maps_ax[0].imshow(
                 mom0map, cmap=cmap0, 
                 vmin=np.min(mom0map[np.nonzero(mom0map)]), 
                 vmax=np.max(mom0map)
@@ -322,9 +326,24 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     maps_ax[0].axhline(y=0.95*len(mom0map), xmin=0.05, xmax=0.05+(1/scale)/len(mom0map[0]), color='black')
     beamEll = Ellipse((bmaj+1,bmaj+1), bmin, bmaj, angle=-bpa, fc='gray', ec=None)
     maps_ax[0].add_patch(beamEll)
+    ### Show colorbar
+    cbar0 = subfigs_right[0].colorbar(mom0plot, ax=maps_ax[0], location='bottom', pad=0)
+    cbar0.ax.set_xticks([])
+    cbar0.ax.set_xticklabels([])
+    ### Show value range
+    maps_ax[0].text(
+                0.95*len(mom0map), 
+                0.03*len(mom0map), 
+                str(round(1e3*np.min(mom0map[np.nonzero(mom0map)]),1))+' / '+str(round(1e3*np.max(mom0map),1))+' mJy', 
+                va='top', ha='right', fontsize=6
+            )
 
     ## Show moment 1
-    maps_ax[1].imshow(mom1map, cmap=cmap1, vmin=np.min(mom1map[np.nonzero(mom1map)]), vmax=np.max(mom1map))
+    mom1plot = maps_ax[1].imshow(
+                mom1map, cmap=cmap1, 
+                vmin=np.min(mom1map[np.nonzero(mom1map)]), 
+                vmax=np.max(mom1map)
+            )
     maps_ax[1].set_title('Mom 1')
     ### Add compass
     compass_size = 0.1  # Adjust the size of the compass relative to the plot
@@ -343,19 +362,73 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     if pvdangle > 180 : pvd_angle -= 180
     pvdslope = -np.tan(pvdangle*(np.pi/180))
     maps_ax[1].axline((np.mean(k.xc),np.mean(k.yc)), slope=pvdslope, ls='--', c='black', lw=0.5)
+    ### Show colorbar
+    cbar1 = subfigs_right[0].colorbar(mom1plot, ax=maps_ax[1], location='bottom', pad=0)
+    cbar1.ax.set_xticks([])
+    cbar1.ax.set_xticklabels([])
+    ### Show value range
+    maps_ax[1].text(
+                0.95*len(mom0map), 
+                0.03*len(mom0map), 
+                str(int(np.min(mom1map[np.nonzero(mom1map)])-np.mean(k0)))+' / '+str(int(np.max(mom1map)-np.mean(k0)))+' km s$^{-1}$', 
+                va='top', ha='right', fontsize=6
+            )
 
     ## Show moment 2
-    maps_ax[2].imshow(mom2map, cmap=cmap0, vmin=np.min(mom2map[np.nonzero(mom2map)]), vmax=np.max(mom2map))
+    mom2plot = maps_ax[2].imshow(
+                mom2map, cmap=cmap0, 
+                vmin=np.min(mom2map[np.nonzero(mom2map)]), 
+                vmax=np.max(mom2map)
+            )
     maps_ax[2].set_title('Mom 2')
-
-    # Plot PVD
-    pvdmap = np.flipud(fits.open(dataloc+'pvd.fits')[0].data)
-    hist_ax[1].imshow(pvdmap, cmap='bone', aspect='auto')
-    hist_ax[1].set_box_aspect(1)
+    ### Show colorbar
+    cbar2 = subfigs_right[0].colorbar(mom2plot, ax=maps_ax[2], location='bottom', pad=0)
+    cbar2.ax.set_xticks([])
+    cbar2.ax.set_xticklabels([])
+    ### Show value range
+    maps_ax[2].text(
+                0.95*len(mom0map), 
+                0.03*len(mom0map), 
+                str(round(np.min(mom2map[np.nonzero(mom2map)]),1))+' / '+str(round(np.max(mom2map),1))+' km s$^{-1}$', 
+                va='top', ha='right', fontsize=6
+            )
 
     for aa in maps_ax:
         aa.get_xaxis().set_visible(False)
         aa.get_yaxis().set_visible(False)
+
+    # Plot velocity histogram
+    veldata = pd.read_csv(dataloc+'vel_profile.csv')
+    hist_ax[0].step(veldata.iloc[:,0].values, veldata.iloc[:,1].values, c='black', lw=0.5)
+    hist_ax[0].set_box_aspect(1)
+    hist_ax[0].xaxis.set_major_locator(ticker.MaxNLocator(nbins=3))
+    hist_ax[0].set_xlabel('Velocity Channel (km s$^{-1}$)')
+    hist_ax[0].set_ylabel('Flux Density (mJy)')
+
+    # Plot PVD
+    pvdmap = np.flipud(fits.open(dataloc+'pvd.fits')[0].data)
+    pvdhdr = fits.open(dataloc+'pvd.fits')[0].header
+    posref = pvdhdr['CRPIX1']
+    delpos = pvdhdr['CRDELT1']
+    velref = pvdhdr['CRPIX2']
+    delvel = pvdhdr['CRDELT2']
+    hist_ax[1].xaxis.set_major_formatter(lambda x,pos : round((x-posref)*delpos*3600))
+    hist_ax[1].yaxis.set_major_formatter(lambda x,pos : -int((x-velref)*delvel))
+    hist_ax[1].xaxis.set_major_locator(ticker.MaxNLocator(3))
+    hist_ax[1].yaxis.set_major_locator(ticker.MaxNLocator(3))
+    hist_ax[1].imshow(pvdmap, cmap='bone', aspect='auto')
+    hist_ax[1].set_box_aspect(1)
+    hist_ax[1].set_xlabel('Major Axis Distance (arcsec)')
+    hist_ax[1].set_ylabel('$\Delta$ Velocity (km s$^{-1}$)')
+
+    # Text for other parameters
+    text_ax.set_xticks([])
+    text_ax.set_yticks([])
+    text_ax.set_xticklabels([])
+    text_ax.set_yticklabels([])
+    text_ax.axis('off')
+
+    text_ax.text(0, 0.9, 'Velocity Binning : '+str(round(delvel,1))+' km s$^{-1}$', va='center', ha='left', fontsize=8)
 
 
 ##############################################################
