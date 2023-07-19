@@ -35,7 +35,7 @@ mpl.rcParams['axes.titlesize'] = 8.
 #           kinemetry outputs                                #
 ##############################################################
 
-def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_size=None, user_plot_lims={}):
+def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_size=None, user_plot_lims={}, pos_dist={}):
 
     # Retrieve kinemetry outputs and calculate uncertainties
     radii = k.rad[:]*scale
@@ -93,8 +93,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
 
     # Plot pa
     ax[0].errorbar(radii, pa, yerr=dpa, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
-    if len(k.pa_sp) > 0:
-        ax[0].fill_between(radii, k.pa_md-k.pa_sp, k.pa_md+k.pa_sp, fc='lightgray', zorder=0)
+    if "pa_med" in pos_dist:
+        ax[0].fill_between(radii, pos_dist["pa_med"]-pos_dist["pa_std"], pos_dist["pa_med"]+pos_dist["pa_std"], ec=None, fc='lightgray', zorder=0)
     ax[0].set_ylabel('$\Gamma$ (deg)', rotation='horizontal', ha='right')
     ax[0].set_box_aspect(0.5)
     ax[0].set_xlim(left=0)
@@ -115,8 +115,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
 
     # Plot q
     ax[1].errorbar(radii, q, yerr=dq, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
-    if len(k.pa_sp) > 0:
-        ax[1].fill_between(radii, k.q_md-k.q_sp, k.q_md+k.q_sp, fc='lightgray', zorder=0)
+    if "q_med" in pos_dist:
+        ax[1].fill_between(radii, pos_dist["q_med"]-pos_dist["q_std"], pos_dist["q_med"]+pos_dist["q_std"], ec=None, fc='lightgray', zorder=0)
     ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
     ax[1].set_box_aspect(0.5)
     ax[1].yaxis.set_label_position('right')
@@ -129,8 +129,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
 
     # Plot k1
     ax[2].errorbar(radii, k1, yerr=dk1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
-    if len(k.k1_sp) > 0:
-        ax[2].fill_between(radii, k.k1_md-k.k1_sp, k.k1_md+k.k1_sp, fc='lightgray', zorder=0)
+    if "k1_med" in pos_dist:
+        ax[2].fill_between(radii, pos_dist["k1_med"]-pos_dist["k1_std"], pos_dist["k1_med"]+pos_dist["k1_std"], ec=None, fc='lightgray', zorder=0)
     ax[2].set_ylabel('$k_1$ (km s$^{-1}$)', rotation='horizontal', ha='right')
     ax[2].set_box_aspect(0.5)
     ax[2].yaxis.tick_right()
@@ -216,15 +216,15 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     dk5k1 = np.abs(k5k1) * np.sqrt((dk1/k1)**2 + (dk5/k5)**2)
 
     # Set up figure architecture
-    fig = plt.figure(figsize=(8,5))
-    subfigs = fig.subfigures(1, 2, wspace=-0.05, width_ratios=[1.,1.2])
+    fig = plt.figure(figsize=(8,4))
+    subfigs = fig.subfigures(1, 2, wspace=-0.05, width_ratios=[1.,1.8])
     gs0 = subfigs[0].add_gridspec(4, hspace=0)
     rad_ax = gs0.subplots(sharex=True)
     radial_ratio = 0.7
-    subfigs_right = subfigs[1].subfigures(3, 1, hspace=0.0, height_ratios=[1.,1.,0.5])
+    subfigs_right = subfigs[1].subfigures(3, 1, hspace=0.0, height_ratios=[0.8,1.,0.5])
     gsmaps = subfigs_right[0].add_gridspec(1, 3, wspace=0)
     maps_ax = gsmaps.subplots(sharey=True)
-    histmaps = subfigs_right[1].add_gridspec(1, 2, wspace=0.8)
+    histmaps = subfigs_right[1].add_gridspec(1, 3, wspace=0.8, bottom=0.3)
     hist_ax = histmaps.subplots()
     textgs = subfigs_right[2].add_gridspec(1)
     text_ax = textgs.subplots()
@@ -243,8 +243,6 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
 
     # Plot pa
     rad_ax[0].errorbar(radii, pa, yerr=dpa, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
-    if len(k.pa_sp) > 0:
-        rad_ax[0].fill_between(radii, k.pa_md-k.pa_sp, k.pa_md+k.pa_sp, fc='lightgray', zorder=0)
     rad_ax[0].set_ylabel('$\Gamma$ (deg)', rotation='horizontal', ha='right')
     rad_ax[0].set_box_aspect(radial_ratio)
     rad_ax[0].set_xlim(left=0)
@@ -265,11 +263,9 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
 
     # Plot q
     rad_ax[1].errorbar(radii, q, yerr=dq, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
-    if len(k.pa_sp) > 0:
-        rad_ax[1].fill_between(radii, k.q_md-k.q_sp, k.q_md+k.q_sp, fc='lightgray', zorder=0)
-    rad_ax[1].set_ylabel('$q$', rotation='horizontal', ha='right')
+    rad_ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
     rad_ax[1].set_box_aspect(radial_ratio)
-    rad_ax[1].yaxis.tick_right()
+    rad_ax[1].yaxis.set_label_position('right')
     rad_ax[1].set_ylim(plot_lims["q"])
     rad_ax[1].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     rad_ax[1].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
@@ -279,8 +275,6 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
 
     # Plot k1
     rad_ax[2].errorbar(radii, k1, yerr=dk1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
-    if len(k.k1_sp) > 0:
-        rad_ax[2].fill_between(radii, k.k1_md-k.k1_sp, k.k1_md+k.k1_sp, fc='lightgray', zorder=0)
     rad_ax[2].set_ylabel('$k_1$ (km s$^{-1}$)', rotation='horizontal', ha='right')
     rad_ax[2].set_box_aspect(radial_ratio)
     rad_ax[2].yaxis.tick_right()
@@ -297,9 +291,9 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     # Plot k5k1
     rad_ax[3].errorbar(radii, k5k1, yerr=dk5k1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
     rad_ax[3].set_xlabel('Radius (arcsec)')
-    rad_ax[3].set_ylabel('$k_5/k_1$', rotation='horizontal', ha='right')
+    rad_ax[3].set_ylabel('$k_5/k_1$', rotation='horizontal', ha='left')
+    rad_ax[3].yaxis.set_label_position('right')
     rad_ax[3].set_box_aspect(radial_ratio)
-    rad_ax[3].yaxis.tick_right()
     rad_ax[3].set_ylim(plot_lims["k5k1"])
     rad_ax[3].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     rad_ax[3].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
@@ -322,14 +316,14 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
                 vmin=np.min(mom0map[np.nonzero(mom0map)]), 
                 vmax=np.max(mom0map)
             )
-    maps_ax[0].set_title('Mom 0')
+    maps_ax[0].text(0.95*len(mom0map), 0.98*len(mom0map[0]), 'Mom 0', va='bottom', ha='right', fontsize=8.)
     maps_ax[0].axhline(y=0.95*len(mom0map), xmin=0.05, xmax=0.05+(1/scale)/len(mom0map[0]), color='black')
     beamEll = Ellipse((bmaj+1,bmaj+1), bmin, bmaj, angle=-bpa, fc='gray', ec=None)
     maps_ax[0].add_patch(beamEll)
     ### Show colorbar
-    cbar0 = subfigs_right[0].colorbar(mom0plot, ax=maps_ax[0], location='bottom', pad=0)
-    cbar0.ax.set_xticks([])
-    cbar0.ax.set_xticklabels([])
+    cbar0 = subfigs_right[0].colorbar(mom0plot, ax=maps_ax[0], location='right', pad=0)
+    cbar0.ax.set_yticks([])
+    cbar0.ax.set_yticklabels([])
     ### Show value range
     maps_ax[0].text(
                 0.95*len(mom0map), 
@@ -344,28 +338,28 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
                 vmin=np.min(mom1map[np.nonzero(mom1map)]), 
                 vmax=np.max(mom1map)
             )
-    maps_ax[1].set_title('Mom 1')
+    maps_ax[1].text(0.95*len(mom0map), 0.98*len(mom0map[0]), 'Mom 1', va='bottom', ha='right', fontsize=8.)
     ### Add compass
     compass_size = 0.1  # Adjust the size of the compass relative to the plot
-    compass_x = 0.9*len(mom0map)
+    compass_x = 0.15*len(mom0map)
     compass_y = 0.95*len(mom0map[0])
-    compass_end_x = 0.83*len(mom0map)
+    compass_end_x = 0.08*len(mom0map)
     compass_end_y = 0.88*len(mom0map)
-    label_padding = 0.02*len(mom0map)
+    label_padding = 0.03*len(mom0map)
     maps_ax[1].plot([compass_x, compass_end_x], [compass_y, compass_y], c='black', lw=0.5)
     maps_ax[1].plot([compass_x, compass_x], [compass_y, compass_end_y], c='black', lw=0.5)
     label_padding = compass_size * maps_ax[1].get_xlim()[1] * 0.05
-    maps_ax[1].text(compass_x, compass_end_y+label_padding, 'N', va='bottom', ha='center', fontsize=4)
-    maps_ax[1].text(compass_end_x-label_padding, compass_y, 'E', va='center', ha='right', fontsize=4)
+    maps_ax[1].text(compass_x, compass_end_y+label_padding, 'N', va='bottom', ha='center', fontsize=6.)
+    maps_ax[1].text(compass_end_x-label_padding, compass_y, 'E', va='center', ha='right', fontsize=6.)
     ### Show PVD slice angle
     pvdangle = (fits.open(dataloc+'pvd.fits')[0].header)['CROTA2']
-    if pvdangle > 180 : pvd_angle -= 180
+    if pvdangle > 180 : pvdangle -= 180
     pvdslope = -np.tan(pvdangle*(np.pi/180))
     maps_ax[1].axline((np.mean(k.xc),np.mean(k.yc)), slope=pvdslope, ls='--', c='black', lw=0.5)
     ### Show colorbar
-    cbar1 = subfigs_right[0].colorbar(mom1plot, ax=maps_ax[1], location='bottom', pad=0)
-    cbar1.ax.set_xticks([])
-    cbar1.ax.set_xticklabels([])
+    cbar1 = subfigs_right[0].colorbar(mom1plot, ax=maps_ax[1], location='right', pad=0)
+    cbar1.ax.set_yticks([])
+    cbar1.ax.set_yticklabels([])
     ### Show value range
     maps_ax[1].text(
                 0.95*len(mom0map), 
@@ -380,11 +374,11 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
                 vmin=np.min(mom2map[np.nonzero(mom2map)]), 
                 vmax=np.max(mom2map)
             )
-    maps_ax[2].set_title('Mom 2')
+    maps_ax[2].text(0.95*len(mom0map), 0.98*len(mom0map[0]), 'Mom 2', va='bottom', ha='right', fontsize=8.)
     ### Show colorbar
-    cbar2 = subfigs_right[0].colorbar(mom2plot, ax=maps_ax[2], location='bottom', pad=0)
-    cbar2.ax.set_xticks([])
-    cbar2.ax.set_xticklabels([])
+    cbar2 = subfigs_right[0].colorbar(mom2plot, ax=maps_ax[2], location='right', pad=0)
+    cbar2.ax.set_yticks([])
+    cbar2.ax.set_yticklabels([])
     ### Show value range
     maps_ax[2].text(
                 0.95*len(mom0map), 
@@ -420,6 +414,9 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     hist_ax[1].set_box_aspect(1)
     hist_ax[1].set_xlabel('Major Axis Distance (arcsec)')
     hist_ax[1].set_ylabel('$\Delta$ Velocity (km s$^{-1}$)')
+
+    # Plot SB profile
+    hist_ax[2].set_box_aspect(1)
 
     # Text for other parameters
     text_ax.set_xticks([])

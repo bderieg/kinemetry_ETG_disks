@@ -8,6 +8,8 @@ import scipy.interpolate as interp
 from scipy.spatial import ConvexHull
 import astropy.units as u
 import json
+from tqdm.auto import tqdm
+import corner
 
 import kinemetry_scripts.kinemetry as kin
 import plotting_scripts as plotter
@@ -46,6 +48,7 @@ default_params = {
         'extrap_pixels' : 0.0,
         'incrad' : 1,
         'flux_cutoff' : 0.0,
+        'snr_cutoff' : 0.0,
         'bad_bins' : [],
         'saveloc' : 'none',
         'objname' : 'noname',
@@ -55,7 +58,7 @@ default_params = {
         'saveplots' : False,
         'savedata' : False,
         'calc_mass' : False,
-        'mcmc' : False
+        'mc' : False
     }
 
 dependencies = {
@@ -186,6 +189,9 @@ if type(params['bad_bins']) is int:
     moment_data.drop(int(params['bad_bins'])-14, inplace=True)
 else:
     moment_data.drop([x-13 for x in list(params['bad_bins'])], inplace=True)
+## From S/N threshold
+below_cutoff = moment_data['S/N'] < params['snr_cutoff']
+moment_data = moment_data[~below_cutoff]
 
 xbin = moment_data['x (pix)'].values
 ybin = moment_data['y (pix)'].values
@@ -300,9 +306,78 @@ k = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
         allterms=params['allterms'], even=params['even'],
         cover=params['cover'], plot=params['plot'],
         vsys=params['vsys'], drad=params['drad'],
-        ring=params['ring']/pix_to_arcsec, verbose=params['verbose'],
-        mcmc=params['mcmc']
+        ring=params['ring']/pix_to_arcsec, verbose=params['verbose']
         )
+
+#####################
+# Monte Carlo it up #
+#####################
+
+pos_dist = {}
+if params['mc']:
+    num_runs_mc = 100
+    pbmc = tqdm(range(num_runs_mc), desc="Running MC", leave=False)
+    run_list = []
+    velkin = k.velkin
+    velkin_mask = velkin > 1e7
+    velkin[velkin_mask] = velbin[velkin_mask]
+    for itr in range(num_runs_mc):
+        # Add random noise to original kinemetry model
+        noised_model = np.random.normal(velkin, velbin_unc, np.size(xbin))
+        # Rerun kinemetry
+        run_list.append(kin.kinemetry(xbin=xbin, ybin=ybin, moment=noised_model, error=velbin_unc,
+            x0=params['x0'], y0=params['y0'],
+            rangeQ=params['rangeq'], rangePA=params['rangepa'],
+            nq=params['nq'], npa=params['npa'],
+            ntrm=params['ntrm'], incrad=params['incrad'],
+            fixcen=params['fixcen'], nrad=params['nrad'],
+            allterms=params['allterms'], even=params['even'],
+            cover=params['cover'], plot=params['plot'],
+            vsys=params['vsys'], drad=params['drad'],
+            ring=params['ring']/pix_to_arcsec, verbose=False
+            ))
+        pbmc.update(1)
+    pa_list = []
+    q_list = []
+    k1_list = []
+    for run in run_list:
+        pa_list.append(run.pa)
+        q_list.append(run.q)
+        k1_list.append(np.sqrt(run.cf[:,1]**2 + run.cf[:,2]**2))
+    pa_list = np.array(pa_list)
+    q_list = np.array(q_list)
+    k1_list = np.array(k1_list)
+    pa_std = np.std(pa_list, axis=0)
+    q_std = np.std(q_list, axis=0)
+    k1_std = np.std(k1_list, axis=0)
+    pa_med = np.median(pa_list, axis=0)
+    q_med = np.median(q_list, axis=0)
+    k1_med = np.median(k1_list, axis=0)
+    pos_dist = {
+            "pa_med" : pa_med,
+            "pa_std" : pa_std,
+            "q_med" : q_med,
+            "q_std" : q_std,
+            "k1_med" : k1_med,
+            "k1_std" : k1_std
+            }
+
+    # cp_labels = ['PA0', 'Q0', 'PA1', 'Q1', 'PA2', 'Q2', 'PA3', 'Q3']
+    # cp_samples = np.transpose(np.array([
+    #                                 pa_list[:,4],q_list[:,4],
+    #                                 pa_list[:,5],q_list[:,5],
+    #                                 pa_list[:,6],q_list[:,6],
+    #                                 pa_list[:,7],q_list[:,7],
+    #                             ]))
+    # fig = corner.corner(
+    #     cp_samples,
+    #     labels=cp_labels,
+    #     quantiles=[0.16,0.5,0.84],
+    #     show_titles=True,
+    #     plot_datapoints=True
+    # )
+    # plt.show()
+
 
 #########################################################
 # Get surface brightness profile with kinemetry results #
@@ -322,7 +397,7 @@ sb = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin, error=fluxbin_unc,
 ##########################
 
 # Plot radial profiles
-radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec, ref_pa=params['ref_pa'], ref_q=params['ref_q'], beam_size=beam_area_arcsec,
+radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec, ref_pa=params['ref_pa'], ref_q=params['ref_q'], beam_size=beam_area_arcsec, pos_dist=pos_dist,
         user_plot_lims={
             "pa":params["plotlimspa"],
             "q":params["plotlimsq"],
