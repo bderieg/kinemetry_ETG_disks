@@ -10,6 +10,7 @@ import astropy.units as u
 import json
 from tqdm.auto import tqdm
 import corner
+from astropy.io import fits
 
 import kinemetry_scripts.kinemetry as kin
 import plotting_scripts as plotter
@@ -295,6 +296,21 @@ velbin = vel_interp
 velbin_unc = vel_unc_interp
 fluxbin_unc = flux_unc_interp
 
+# Output interpolated maps as fits
+## Initialize empty arrays
+map_shape = np.shape(fits.open(params['dataloc']+"mom0.fits")[0].data)
+mom0_interp = np.empty(map_shape)
+mom1_interp = np.empty(map_shape)
+mom0_interp[:,:] = np.nan
+mom1_interp[:,:] = np.nan
+## Fill with interpolated values
+for xy,ff,vv in zip(outxy,fluxbin,velbin):
+    mom0_interp[int(xy[1]),int(xy[0])] = ff
+    mom1_interp[int(xy[1]),int(xy[0])] = vv
+## Write maps
+fits.PrimaryHDU(mom0_interp).writeto(params['dataloc']+"mom0_interp.fits", overwrite=True)
+fits.PrimaryHDU(mom1_interp).writeto(params['dataloc']+"mom1_interp.fits", overwrite=True)
+
 ##############################
 # Do the main kinemetry task #
 ##############################
@@ -332,9 +348,9 @@ if params['mc']:
             rangeQ=params['rangeq'], rangePA=params['rangepa'],
             nq=params['nq'], npa=params['npa'],
             ntrm=params['ntrm'], incrad=params['incrad'],
-            fixcen=params['fixcen'], nrad=params['nrad'],
+            fixcen=params['fixcen'], nrad=len(k.rad),
             allterms=params['allterms'], even=params['even'],
-            cover=params['cover'], plot=params['plot'],
+            cover=0.0, plot=params['plot'],
             vsys=params['vsys'], drad=params['drad'],
             ring=params['ring']/pix_to_arcsec, verbose=False
             ))
@@ -347,7 +363,7 @@ if params['mc']:
         pa_list.append(run.pa)
         q_list.append(run.q)
         k1_list.append(np.sqrt(run.cf[:,1]**2 + run.cf[:,2]**2))
-        k5k1_list.append(np.sqrt(k.cf[:,5]**2 + k.cf[:,6]**2) / np.sqrt(run.cf[:,1]**2 + run.cf[:,2]**2))
+        k5k1_list.append(np.sqrt(run.cf[:,5]**2 + run.cf[:,6]**2) / np.sqrt(run.cf[:,1]**2 + run.cf[:,2]**2))
     pa_list = np.array(pa_list)
     q_list = np.array(q_list)
     k1_list = np.array(k1_list)

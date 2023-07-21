@@ -1,0 +1,3 @@
+[submodule "Ellipsoid-Fit"]
+	path = Ellipsoid-Fit
+	url = git@github.com:rmsandu/Ellipsoid-Fit.git
