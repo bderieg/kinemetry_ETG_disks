@@ -146,6 +146,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
 
     # Plot k5k1
     ax[3].errorbar(radii, k5k1, yerr=dk5k1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    if "k5k1_med" in pos_dist:
+        ax[3].fill_between(radii, pos_dist["k5k1_med"]-pos_dist["k5k1_std"], pos_dist["k5k1_med"]+pos_dist["k5k1_std"], ec=None, fc='lightgray', zorder=0)
     ax[3].set_xlabel('Radius (arcsec)')
     ax[3].set_ylabel('$k_5/k_1$', rotation='horizontal', ha='left')
     ax[3].set_box_aspect(0.5)
@@ -176,10 +178,15 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
     return data
 
 
-def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_size=None, bmin=0, bmaj=0, bpa=0, user_plot_lims={}):
+def plot_summary(k, ksb, scale, phys_scale, dataloc, 
+            ref_pa=None, ref_q=None, beam_size=None, beam_area_pix=None,
+            bmin=0, bmaj=0, bpa=0, intensity_to_mass=0, targetsn=0.0,
+            user_plot_lims={}
+        ):
 
     # Retrieve kinemetry outputs and calculate uncertainties
     radii = k.rad[:]*scale
+    sbradii = ksb.rad[:]*scale
 
     ## v_sys (i.e., k_0)
     k0 = k.cf[:,0]
@@ -214,6 +221,10 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     ## k5/k1 (and uncertainty propagation)
     k5k1 = k5/k1
     dk5k1 = np.abs(k5k1) * np.sqrt((dk1/k1)**2 + (dk5/k5)**2)
+
+    ## surface brightness
+    sb = ksb.cf[:,0] * beam_area_pix
+    dsb = ksb.er_cf[:,0] * beam_area_pix
 
     # Set up figure architecture
     fig = plt.figure(figsize=(8,4))
@@ -318,7 +329,8 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
             )
     maps_ax[0].text(0.95*len(mom0map), 0.98*len(mom0map[0]), 'Mom 0', va='bottom', ha='right', fontsize=8.)
     maps_ax[0].axhline(y=0.95*len(mom0map), xmin=0.05, xmax=0.05+(1/scale)/len(mom0map[0]), color='black')
-    beamEll = Ellipse((bmaj+1,bmaj+1), bmin, bmaj, angle=-bpa, fc='gray', ec=None)
+    ## Show beam reference
+    beamEll = Ellipse((bmaj+1,bmaj+1), bmin, bmaj, angle=bpa, fc='gray', ec=None)
     maps_ax[0].add_patch(beamEll)
     ### Show colorbar
     cbar0 = subfigs_right[0].colorbar(mom0plot, ax=maps_ax[0], location='right', pad=0)
@@ -396,7 +408,7 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     hist_ax[0].step(veldata.iloc[:,0].values, veldata.iloc[:,1].values, c='black', lw=0.5)
     hist_ax[0].set_box_aspect(1)
     hist_ax[0].xaxis.set_major_locator(ticker.MaxNLocator(nbins=3))
-    hist_ax[0].set_xlabel('Velocity Channel (km s$^{-1}$)')
+    hist_ax[0].set_xlabel('Velocity Channel\n(km s$^{-1}$)')
     hist_ax[0].set_ylabel('Flux Density (mJy)')
 
     # Plot PVD
@@ -410,13 +422,44 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     hist_ax[1].yaxis.set_major_formatter(lambda x,pos : -int((x-velref)*delvel))
     hist_ax[1].xaxis.set_major_locator(ticker.MaxNLocator(3))
     hist_ax[1].yaxis.set_major_locator(ticker.MaxNLocator(3))
-    hist_ax[1].imshow(pvdmap, cmap='bone', aspect='auto')
+    hist_ax[1].imshow(np.arcsinh(pvdmap), cmap='bone_r', aspect='auto')
     hist_ax[1].set_box_aspect(1)
-    hist_ax[1].set_xlabel('Major Axis Distance (arcsec)')
-    hist_ax[1].set_ylabel('$\Delta$ Velocity (km s$^{-1}$)')
+    hist_ax[1].set_xlabel('Major Axis Distance\n(arcsec)')
+    hist_ax[1].set_ylabel('$\Delta$ Velocity(km s$^{-1}$)')
 
     # Plot SB profile
-    hist_ax[2].set_box_aspect(1)
+    hist_ax[2].errorbar(sbradii, sb, yerr=dsb, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    hist_ax[2].set_xscale('log')
+    hist_ax[2].set_yscale('log')
+    hist_ax[2].set_ylabel('$\log_{10}$ I/A$_\mathrm{beam}$\n(Jy km s$^{-1}$ beam$^{-1}$)')
+    hist_ax[2].set_box_aspect(1.0)
+    hist_ax[2].set_xlabel('$\log_{10}$ R\n(arcsec)')
+    hist_ax[2].autoscale()
+    hist_ax[2].xaxis.set_major_locator(ticker.LogLocator(base=10))
+    hist_ax[2].xaxis.set_minor_formatter(lambda x,pos : None)
+    hist_ax[2].xaxis.set_major_formatter(lambda x,pos : int(np.log10(x)))
+    hist_ax[2].yaxis.set_major_locator(ticker.LogLocator(base=10))
+    hist_ax[2].yaxis.set_minor_formatter(lambda y,pos : None)
+    hist_ax[2].yaxis.set_major_formatter(lambda y,pos : int(np.log10(y)))
+    ## Plot gas surface density scale on right
+    axdensity = hist_ax[2].twinx()
+    axdensity.set_box_aspect(1.0)
+    axdensity.set_ylabel('$\log_{10}$ $\Sigma\'_{\\mathrm{gas}}$ (M$_\\odot$ pc$^{-2}$)')
+    axdensity.set_yscale('log')
+    axdensity.autoscale()
+    axdensity.yaxis.set_major_locator(ticker.LogLocator(base=10))
+    axdensity.yaxis.set_minor_formatter(lambda y,pos : None)
+    axdensity.yaxis.set_major_formatter(lambda y,pos : int(np.log10(y)))
+    ## Plot physical scale on top
+    axphys_gas = hist_ax[2].twiny()
+    axphys_gas.set_box_aspect(1.0)
+    axphys_gas.set_xlabel('$\log_{10}$ R (pc)')
+    axphys_gas.set_xscale('log')
+    axphys_gas.set_xlim([i/scale*phys_scale for i in hist_ax[2].get_xlim()])
+    axphys_gas.autoscale()
+    axphys_gas.xaxis.set_major_locator(ticker.LogLocator(base=10))
+    axphys_gas.xaxis.set_minor_formatter(lambda x,pos : None)
+    axphys_gas.xaxis.set_major_formatter(lambda x,pos : int(np.log10(x)))
 
     # Text for other parameters
     text_ax.set_xticks([])
@@ -425,7 +468,10 @@ def plot_summary(k, scale, phys_scale, dataloc, ref_pa=None, ref_q=None, beam_si
     text_ax.set_yticklabels([])
     text_ax.axis('off')
 
-    text_ax.text(0, 0.9, 'Velocity Binning : '+str(round(delvel,1))+' km s$^{-1}$', va='center', ha='left', fontsize=8)
+    text_ax.axhline(1.0, 0, 1, ls='--', c='black')
+    text_ax.text(0, 0.8, 'Velocity Binning : '+str(round(delvel,1))+' km s$^{-1}$', va='center', ha='left', fontsize=8)
+    text_ax.text(0, 0.5, 'Self-Calibration   : ', va='center', ha='left', fontsize=8)
+    text_ax.text(0, 0.2, 'Target S/N            : '+str(targetsn), va='center', ha='left', fontsize=8)
 
 
 ##############################################################

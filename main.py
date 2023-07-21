@@ -167,6 +167,8 @@ bpa = moment_data_full.iloc[3,0]
 bpa = float(bpa[bpa.find(":")+1:])
 pix_scale = moment_data_full.iloc[0,0]
 pix_scale = float(pix_scale[pix_scale.find(":")+1:])
+targetsn = moment_data_full.iloc[6,0]
+targetsn = float(targetsn[targetsn.find(":")+1:])
 
 pix_to_arcsec = pix_scale * 3600
 pix_to_parsec = pix_to_arcsec * params['distance']*u.Mpc.to(u.pc) * np.pi / 180 / 3600
@@ -340,26 +342,33 @@ if params['mc']:
     pa_list = []
     q_list = []
     k1_list = []
+    k5k1_list = []
     for run in run_list:
         pa_list.append(run.pa)
         q_list.append(run.q)
         k1_list.append(np.sqrt(run.cf[:,1]**2 + run.cf[:,2]**2))
+        k5k1_list.append(np.sqrt(k.cf[:,5]**2 + k.cf[:,6]**2) / np.sqrt(run.cf[:,1]**2 + run.cf[:,2]**2))
     pa_list = np.array(pa_list)
     q_list = np.array(q_list)
     k1_list = np.array(k1_list)
+    k5k1_list = np.array(k5k1_list)
     pa_std = np.std(pa_list, axis=0)
     q_std = np.std(q_list, axis=0)
     k1_std = np.std(k1_list, axis=0)
+    k5k1_std = np.std(k5k1_list, axis=0)
     pa_med = np.median(pa_list, axis=0)
     q_med = np.median(q_list, axis=0)
     k1_med = np.median(k1_list, axis=0)
+    k5k1_med = np.median(k5k1_list, axis=0)
     pos_dist = {
             "pa_med" : pa_med,
             "pa_std" : pa_std,
             "q_med" : q_med,
             "q_std" : q_std,
             "k1_med" : k1_med,
-            "k1_std" : k1_std
+            "k1_std" : k1_std,
+            "k5k1_med" : k5k1_med,
+            "k5k1_std" : k5k1_std
             }
 
     # cp_labels = ['PA0', 'Q0', 'PA1', 'Q1', 'PA2', 'Q2', 'PA3', 'Q3']
@@ -397,7 +406,9 @@ sb = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin, error=fluxbin_unc,
 ##########################
 
 # Plot radial profiles
-radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec, ref_pa=params['ref_pa'], ref_q=params['ref_q'], beam_size=beam_area_arcsec, pos_dist=pos_dist,
+radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec, 
+        ref_pa=params['ref_pa'], ref_q=params['ref_q'], 
+        beam_size=beam_area_arcsec, pos_dist=pos_dist,
         user_plot_lims={
             "pa":params["plotlimspa"],
             "q":params["plotlimsq"],
@@ -418,7 +429,10 @@ if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_velocity_maps.png', dpi=1000)
     
 # Plot summary sheet
-summary = plotter.plot_summary(k, pix_to_arcsec, pix_to_parsec, params['dataloc'], ref_pa=params['ref_pa'], ref_q=params['ref_q'], beam_size=beam_area_arcsec, bmin=bmin/pix_scale, bmaj=bmaj/pix_scale, bpa=bpa,
+summary = plotter.plot_summary(k, sb, pix_to_arcsec, pix_to_parsec, 
+        params['dataloc'], ref_pa=params['ref_pa'], ref_q=params['ref_q'], 
+        beam_size=beam_area_arcsec, bmin=bmin/pix_scale, bmaj=bmaj/pix_scale, bpa=bpa,
+        intensity_to_mass=intensity_to_mass, beam_area_pix=beam_area_pix, targetsn=targetsn,
         user_plot_lims={
             "pa":params["plotlimspa"],
             "q":params["plotlimsq"],
