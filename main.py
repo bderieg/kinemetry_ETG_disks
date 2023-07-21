@@ -1,7 +1,10 @@
+import sys
+sys.path.insert(0, './Ellipsoid-Fit')
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
-from matplotlib.patches import PathPatch
+from matplotlib.patches import PathPatch, Ellipse
 from plotbin.plot_velfield import plot_velfield
 import pandas as pd
 import scipy.interpolate as interp
@@ -16,8 +19,8 @@ import kinemetry_scripts.kinemetry as kin
 import plotting_scripts as plotter
 import other_functions as func
 import read_properties as rp
+import outer_ellipsoid as minEll
 
-import sys
 import warnings
 import logging
 # warnings.filterwarnings(action='ignore', category=UserWarning)  # Uncomment to supress all warnings
@@ -262,19 +265,30 @@ if params['calc_mass'] and (params['redshift'] is not None) and (params['distanc
 # Interpolate between bin centroids #
 #####################################
 
+map_shape = np.shape(fits.open(params['dataloc']+"mom0.fits")[0].data)
+
 # Make output grid
 outx, outy = np.meshgrid(
-        np.arange(int(np.min(xbin))-params['extrap_pixels'],int(np.max(xbin))+params['extrap_pixels']), 
-        np.arange(int(np.min(ybin))-params['extrap_pixels'],int(np.max(ybin))+params['extrap_pixels'])
+        np.arange(-params['extrap_pixels'],map_shape[0]+params['extrap_pixels']), 
+        np.arange(-params['extrap_pixels'],map_shape[1]+params['extrap_pixels'])
         )
 outxy = np.column_stack([outx.ravel(), outy.ravel()])
 interp_points = np.column_stack([xbin.ravel(),ybin.ravel()])
 
-## Find the convex hull and make a mask for this
-interp_hull = ConvexHull(interp_points)
-hull_vert = interp_points[interp_hull.vertices]
-outer_path = Path(hull_vert, closed=True)
-inside_mask = outer_path.contains_points(outxy, radius=params['extrap_pixels'])
+# ## Find the convex hull and make a mask for this
+# interp_hull = ConvexHull(interp_points)
+# hull_vert = interp_points[interp_hull.vertices]
+# outer_path = Path(hull_vert, closed=True)
+# inside_mask = outer_path.contains_points(outxy, radius=params['extrap_pixels'])
+# outxy = outxy[inside_mask]
+
+## Find the minimum enclosing ellipse and make a mask for this
+ell_A, ell_c = minEll.outer_ellipsoid_fit(interp_points)
+eigval, eigvec = np.linalg.eig(ell_A)
+ell_a, ell_b = np.sqrt(1/eigval)
+ell_theta = np.arctan2(eigvec[1,0], eigvec[0,0]) * 180./np.pi
+ell_patch = Ellipse((ell_c[0],ell_c[1]), 2*ell_a, 2*ell_b, ell_theta)
+inside_mask = ell_patch.contains_points(outxy, radius=params['extrap_pixels'])
 outxy = outxy[inside_mask]
 
 # Interpolate
@@ -298,7 +312,6 @@ fluxbin_unc = flux_unc_interp
 
 # Output interpolated maps as fits
 ## Initialize empty arrays
-map_shape = np.shape(fits.open(params['dataloc']+"mom0.fits")[0].data)
 mom0_interp = np.empty(map_shape)
 mom1_interp = np.empty(map_shape)
 mom0_interp[:,:] = np.nan
