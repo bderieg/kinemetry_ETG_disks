@@ -178,8 +178,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
     return data
 
 
-def plot_summary(k, ksb, scale, phys_scale, dataloc, 
-            ref_pa=None, ref_q=None, beam_size=None, beam_area_pix=None,
+def plot_summary(k, ksb, ksb_lin, scale, phys_scale, dataloc, 
+            ref_pa=None, ref_pa_unc=None, ref_q=None, beam_size=None, beam_area_pix=None,
             bmin=0, bmaj=0, bpa=0, intensity_to_mass=0, targetsn=0.0,
             user_plot_lims={}
         ):
@@ -187,6 +187,7 @@ def plot_summary(k, ksb, scale, phys_scale, dataloc,
     # Retrieve kinemetry outputs and calculate uncertainties
     radii = k.rad[:]*scale
     sbradii = ksb.rad[:]*scale
+    linsbradii = ksb_lin.rad[:]*scale
 
     ## v_sys (i.e., k_0)
     k0 = k.cf[:,0]
@@ -225,6 +226,8 @@ def plot_summary(k, ksb, scale, phys_scale, dataloc,
     ## surface brightness
     sb = ksb.cf[:,0] * beam_area_pix
     dsb = ksb.er_cf[:,0] * beam_area_pix
+    linsb = ksb_lin.cf[:,0] * beam_area_pix
+    lindsb = ksb_lin.er_cf[:,0] * beam_area_pix
 
     # Set up figure architecture
     fig = plt.figure(figsize=(8,4))
@@ -263,7 +266,8 @@ def plot_summary(k, ksb, scale, phys_scale, dataloc,
     rad_ax[0].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ## Plot reference pa if applicable
     if ref_pa is not None:
-        rad_ax[0].axhline(y=ref_pa, color='red', ls='dashed')
+        rad_ax[0].axhline(y=ref_pa, color='red', ls='dashed', zorder=0)
+        rad_ax[0].fill_between(np.array([-1e9,1e9]), ref_pa-ref_pa_unc, ref_pa+ref_pa_unc, zorder=-1, fc=(1,0,0,0.1))
 
     ## Plot physical scale on top
     axphys = rad_ax[0].twiny()
@@ -429,6 +433,7 @@ def plot_summary(k, ksb, scale, phys_scale, dataloc,
 
     # Plot SB profile
     hist_ax[2].errorbar(sbradii, sb, yerr=dsb, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    hist_ax[2].errorbar(linsbradii, linsb, yerr=lindsb, fmt='.r', markersize=1.5, linewidth=1, elinewidth=0.7)
     hist_ax[2].set_xscale('log')
     hist_ax[2].set_yscale('log')
     hist_ax[2].set_ylabel('$\log_{10}$ I/A$_\mathrm{beam}$\n(Jy km s$^{-1}$ beam$^{-1}$)')

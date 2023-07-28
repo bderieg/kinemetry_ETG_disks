@@ -138,20 +138,15 @@ for item in dependencies['_MANDATORY']:
 params['distance'] = rp.get_prop(params['objname'],'D_L (Mpc)')
 params['distance_unc'] = rp.get_prop(params['objname'],'D_L Unc.')
 params['redshift'] = rp.get_prop(params['objname'],'Redshift (via NED)')
-# pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/ap_phot_data/pa_data.json'))
-# q_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/ap_phot_data/q_data.json'))
-# if params['objname'] in pa_data:
-#     params['ref_pa'] = pa_data[params['objname']]
-# else:
-#     params['ref_pa'] = 1e4
-# if params['objname'] in q_data:
-#     params['ref_q'] = q_data[params['objname']]
-# else:
-#     params['ref_q'] = 1e4
-# params['ref_pa'] = rp.get_prop(params['objname'],'Stellar PA (deg)')
-# params['ref_q'] = rp.get_prop(params['objname'],'Stellar Flattening')
-params['ref_pa'] = 500
-params['ref_q'] = -1.0
+moment_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_ALMA_archive_files/moment_pa_data.json'))
+iso_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_ALMA_archive_files/isophote_pa_data.json'))
+if params['objname'] in moment_pa_data:
+    params['ref_pa'] = moment_pa_data[params['objname']]['pa']
+    params['ref_pa_unc'] = moment_pa_data[params['objname']]['pa_unc']
+else:
+    params['ref_pa'] = 1e4
+params['ref_q'] = -5.0
+params['ref_pa_unc'] = 0.0
 
 ######################
 # Import moment data #
@@ -430,6 +425,11 @@ sb = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin, error=fluxbin_unc,
         x0=fx0, y0=fy0, fixcen=True,
         plot=False, verbose=False)
 
+sb_lin = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin, error=fluxbin_unc,
+        radius=k.rad, paq=np.column_stack((k.pa,k.q)).ravel(),
+        x0=fx0, y0=fy0, fixcen=True,
+        plot=False, verbose=False)
+
 ##########################
 # Plot and retrieve data #
 ##########################
@@ -458,8 +458,8 @@ if (params['saveloc'] != 'none') and params['saveplots']:
     plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_velocity_maps.png', dpi=1000)
     
 # Plot summary sheet
-summary = plotter.plot_summary(k, sb, pix_to_arcsec, pix_to_parsec, 
-        params['dataloc'], ref_pa=params['ref_pa'], ref_q=params['ref_q'], 
+summary = plotter.plot_summary(k, sb, sb_lin, pix_to_arcsec, pix_to_parsec, 
+        params['dataloc'], ref_pa=params['ref_pa'], ref_pa_unc=params['ref_pa_unc'], ref_q=params['ref_q'], 
         beam_size=beam_area_arcsec, bmin=bmin/pix_scale, bmaj=bmaj/pix_scale, bpa=bpa,
         intensity_to_mass=intensity_to_mass, beam_area_pix=beam_area_pix, targetsn=targetsn,
         user_plot_lims={
