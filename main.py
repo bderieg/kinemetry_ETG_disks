@@ -138,8 +138,8 @@ for item in dependencies['_MANDATORY']:
 params['distance'] = rp.get_prop(params['objname'],'D_L (Mpc)')
 params['distance_unc'] = rp.get_prop(params['objname'],'D_L Unc.')
 params['redshift'] = rp.get_prop(params['objname'],'Redshift (via NED)')
-moment_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_ALMA_archive_files/moment_pa_data.json'))
-iso_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_ALMA_archive_files/isophote_pa_data.json'))
+moment_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/moment_pa_data.json'))
+iso_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/isophote_pa_data.json'))
 if params['objname'] in moment_pa_data:
     params['ref_pa'] = moment_pa_data[params['objname']]['pa']
     params['ref_pa_unc'] = moment_pa_data[params['objname']]['pa_unc']
@@ -395,6 +395,7 @@ if params['mc']:
             "k5k1_std" : k5k1_std
             }
 
+    # # Show corner plot
     # cp_labels = ['PA0', 'Q0', 'PA1', 'Q1', 'PA2', 'Q2', 'PA3', 'Q3']
     # cp_samples = np.transpose(np.array([
     #                                 pa_list[:,4],q_list[:,4],
@@ -430,12 +431,33 @@ sb_lin = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin, error=fluxbin_unc,
         x0=fx0, y0=fy0, fixcen=True,
         plot=False, verbose=False)
 
+#######################################
+# Get kinemetry from model parameters #
+#######################################
+
+model_data = {}
+try:
+    model_results = pd.read_csv(params['dataloc']+'model_results.csv')
+    model_data['rad'] = np.array(list(model_results.loc[:,'radius']))
+    model_data['pa'] = np.array(list(model_results.loc[:,'pa']))
+    model_data['pa_unc'] = np.array(list(model_results.loc[:,'pa_unc']))
+    model_data['q'] = np.array(list(model_results.loc[:,'q']))
+    model_data['q_unc'] = np.array(list(model_results.loc[:,'q_unc']))
+    model_data['v_ext'] = np.array(list(model_results.loc[:,'v_ext']))
+    model_data['v_ext_unc'] = np.array(list(model_results.loc[:,'v_ext_unc']))
+    model_data['paq'] = np.transpose(np.array([list(model_results.loc[:,'pa']),list(model_results.loc[:,'q'])])).flatten()
+    # model_kin = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
+    #         radius=model_rad, paq=model_paq, x0=params['x0'], y0=params['y0'], plot=False, verbose=False)
+except:
+    pass
+
 ##########################
 # Plot and retrieve data #
 ##########################
 
 # Plot radial profiles
 radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec, 
+        model_data=model_data,
         ref_pa=params['ref_pa'], ref_q=params['ref_q'], 
         beam_size=beam_area_arcsec, pos_dist=pos_dist,
         user_plot_lims={

@@ -9,6 +9,7 @@ from matplotlib import ticker
 from plotbin.plot_velfield import plot_velfield
 import pandas as pd
 from astropy.io import fits
+import scipy.interpolate as spint
 
 from matplotlib.patches import Ellipse
 
@@ -35,7 +36,7 @@ mpl.rcParams['axes.titlesize'] = 8.
 #           kinemetry outputs                                #
 ##############################################################
 
-def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_size=None, user_plot_lims={}, pos_dist={}):
+def plot_kinemetry_profiles(k, scale, phys_scale, model_data={}, ref_pa=None, ref_q=None, beam_size=None, user_plot_lims={}, pos_dist={}):
 
     # Retrieve kinemetry outputs and calculate uncertainties
     radii = k.rad[:]*scale
@@ -86,13 +87,31 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
             "k1" : [min(k1)-0.1*(max(k1)-min(k1)), max(k1)+0.1*(max(k1)-min(k1))],
             "k5k1" : [0.00, 0.04]
             }
+    if 'rad' in model_data:
+        plot_lims = {
+                "pa" : [
+                        min(min(pa)-0.1*(max(pa)-min(pa)), min(model_data['pa'])-0.1*(max(model_data['pa'])-min(model_data['pa']))), 
+                        max(max(pa)+0.1*(max(pa)-min(pa)), max(model_data['pa'])+0.1*(max(model_data['pa'])-min(model_data['pa'])))
+                    ],
+                "q" : [
+                        min(min(q)-0.1*(max(q)-min(q)), min(model_data['q'])-0.1*(max(model_data['q'])-min(model_data['q']))),
+                        max(max(q)+0.1*(max(q)-min(q)), max(model_data['q'])+0.1*(max(model_data['q'])-min(model_data['q'])))
+                    ],
+                "k1" : [
+                        min(min(k1)-0.1*(max(k1)-min(k1)), min(model_data['v_ext'])-0.1*(max(model_data['v_ext'])-min(model_data['v_ext']))),
+                        max(max(k1)+0.3*(max(k1)-min(k1)), max(model_data['v_ext'])+0.3*(max(model_data['v_ext'])-min(model_data['v_ext'])))
+                    ],
+                "k5k1" : [0.00, 0.04]
+                }
     ## Override with user limits
     ### First remove None values from user dictionary
     user_plot_lims = {key : value for key, value in user_plot_lims.items() if value is not None}
     plot_lims |= user_plot_lims
 
     # Plot pa
-    ax[0].errorbar(radii, pa, yerr=dpa, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
+    ax[0].errorbar(radii, pa, yerr=dpa, marker='s', c='black', ms=3, lw=0.0, elinewidth=0.7, zorder=1)
+    if 'rad' in model_data:
+        ax[0].errorbar(model_data['rad'], model_data['pa'], yerr=model_data['pa_unc'], fmt='k', marker='s', mec='black', mfc='white', ms=3, lw=0.0, elinewidth=0.7, zorder=1)
     if "pa_med" in pos_dist:
         ax[0].fill_between(radii, pos_dist["pa_med"]-pos_dist["pa_std"], pos_dist["pa_med"]+pos_dist["pa_std"], ec=None, fc='lightgray', zorder=0)
     ax[0].set_ylabel('$\Gamma$ (deg)', rotation='horizontal', ha='right')
@@ -102,9 +121,6 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
     ax[0].set_ylim(plot_lims["pa"])
     ax[0].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[0].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
-    ## Plot reference pa if applicable
-    if ref_pa is not None:
-        ax[0].axhline(y=ref_pa, color='red', ls='dashed')
 
     ## Plot physical scale on top
     axphys = ax[0].twiny()
@@ -114,7 +130,9 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
     axphys.xaxis.set_major_locator(ticker.MaxNLocator(4))
 
     # Plot q
-    ax[1].errorbar(radii, q, yerr=dq, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
+    ax[1].errorbar(radii, q, yerr=dq, marker='s', c='black', ms=3, lw=0.0, elinewidth=0.7, zorder=1, label='kinemetry')
+    if 'rad' in model_data:
+        ax[1].errorbar(model_data['rad'], model_data['q'], yerr=model_data['q_unc'], fmt='k', marker='s', mec='black', mfc='white', ms=3, lw=0.0, elinewidth=0.7, zorder=1, label='model')
     if "q_med" in pos_dist:
         ax[1].fill_between(radii, pos_dist["q_med"]-pos_dist["q_std"], pos_dist["q_med"]+pos_dist["q_std"], ec=None, fc='lightgray', zorder=0)
     ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
@@ -123,12 +141,18 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
     ax[1].set_ylim(plot_lims["q"])
     ax[1].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[1].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
-    ## Plot reference q if applicable
-    if ref_q is not None:
-        ax[1].axhline(y=ref_q, color='red', ls='dashed')
+    if 'rad' in model_data:
+        ax[1].legend(loc='upper left', bbox_to_anchor=(1.17,1.0), fontsize=6)
 
     # Plot k1
-    ax[2].errorbar(radii, k1, yerr=dk1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7, zorder=1)
+    ax[2].errorbar(radii, k1, yerr=dk1, marker='s', c='black', ms=3, lw=0.0, elinewidth=0.7, zorder=1)
+    if 'rad' in model_data:
+        ax[2].errorbar(
+                    model_data['rad'], 
+                    model_data['v_ext']*np.sqrt(1-model_data['q']**2), 
+                    yerr=np.sqrt(model_data['v_ext_unc']*(1-model_data['q']**2)+(model_data['v_ext']**2*np.abs(model_data['q']*model_data['q_unc'])**2)/(1-model_data['q']**2)), 
+                    fmt='k', marker='s', mec='black', mfc='white', ms=3, ls='-', lw=0.7, elinewidth=0.7, zorder=1
+                )
     if "k1_med" in pos_dist:
         ax[2].fill_between(radii, pos_dist["k1_med"]-pos_dist["k1_std"], pos_dist["k1_med"]+pos_dist["k1_std"], ec=None, fc='lightgray', zorder=0)
     ax[2].set_ylabel('$k_1$ (km s$^{-1}$)', rotation='horizontal', ha='right')
@@ -137,15 +161,23 @@ def plot_kinemetry_profiles(k, scale, phys_scale, ref_pa=None, ref_q=None, beam_
     ax[2].set_ylim(plot_lims["k1"])
     ax[2].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[2].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
-    ## Plot beam reference line if applicable
-    if beam_size is not None:
-        if np.arccos(min(q))*(180/np.pi) < 75:
-            ax[2].axvline(x=2*beam_size, color='blue', ls='dotted')
-        else:
-            ax[2].axvline(x=5*beam_size, color='blue', ls='dotted')
+    if 'rad' in model_data:
+        ## Get BH curve
+        bh_mass = 2.249e9
+        G = 4.3009e-3
+        finerad = np.arange(0.0, 10.0, 0.01)
+        v_bh = np.sqrt(G*bh_mass/(finerad/scale*phys_scale))
+        ## Interpolate v_ext values
+        vext_interp = spint.interp1d(model_data['rad'], model_data['v_ext'], fill_value='extrapolate')
+        q_interp = spint.interp1d(model_data['rad'], model_data['q'], fill_value='extrapolate')
+        ## Plot everything
+        ax[2].plot(finerad, v_bh*np.sqrt(1-q_interp(finerad)**2), ls=':', c='black', label='$v_{BH}$', lw=0.7)
+        ax[2].plot(finerad, vext_interp(finerad)*np.sqrt(1-q_interp(finerad)**2), ls='--', lw=0.7, c='black', zorder=-2, label='$v_{ext}$')
+        ax[2].plot(finerad, np.sqrt(G*bh_mass/(finerad/scale*phys_scale)+vext_interp(finerad)**2)*np.sqrt(1-q_interp(finerad)**2), ls='-', lw=0.7, c='black', zorder=-3, label='$v_{BH+ext}$')
+        ax[2].legend(loc='upper left', bbox_to_anchor=(1.17,1.0), fontsize=6)
 
     # Plot k5k1
-    ax[3].errorbar(radii, k5k1, yerr=dk5k1, fmt='.k', markersize=1.5, linewidth=1, elinewidth=0.7)
+    ax[3].errorbar(radii, k5k1, yerr=dk5k1, marker='s', c='black', ms=3, lw=0.0, elinewidth=0.7, zorder=1)
     if "k5k1_med" in pos_dist:
         ax[3].fill_between(radii, pos_dist["k5k1_med"]-pos_dist["k5k1_std"], pos_dist["k5k1_med"]+pos_dist["k5k1_std"], ec=None, fc='lightgray', zorder=0)
     ax[3].set_xlabel('Radius (arcsec)')
