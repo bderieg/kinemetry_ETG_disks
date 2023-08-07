@@ -79,6 +79,7 @@ def plot_kinemetry_profiles(k, scale, phys_scale, model_data={}, ref_pa=None, re
     fig = plt.figure()
     gs = fig.add_gridspec(4, hspace=0)
     ax = gs.subplots(sharex=True)
+    markersize = 2
 
     # Set default plot limits
     plot_lims = {
@@ -109,9 +110,9 @@ def plot_kinemetry_profiles(k, scale, phys_scale, model_data={}, ref_pa=None, re
     plot_lims |= user_plot_lims
 
     # Plot pa
-    ax[0].errorbar(radii, pa, yerr=dpa, marker='s', c='black', ms=3, lw=0.0, elinewidth=0.7, zorder=1)
+    ax[0].errorbar(radii, pa, yerr=dpa, marker='s', c='black', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
     if 'rad' in model_data:
-        ax[0].errorbar(model_data['rad'], model_data['pa'], yerr=model_data['pa_unc'], fmt='k', marker='s', mec='black', mfc='white', ms=3, lw=0.0, elinewidth=0.7, zorder=1)
+        ax[0].errorbar(model_data['rad'], model_data['pa'], yerr=model_data['pa_unc'], fmt='k', marker='s', mec='black', mfc='white', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
     if "pa_med" in pos_dist:
         ax[0].fill_between(radii, pos_dist["pa_med"]-pos_dist["pa_std"], pos_dist["pa_med"]+pos_dist["pa_std"], ec=None, fc='lightgray', zorder=0)
     ax[0].set_ylabel('$\Gamma$ (deg)', rotation='horizontal', ha='right')
@@ -130,9 +131,9 @@ def plot_kinemetry_profiles(k, scale, phys_scale, model_data={}, ref_pa=None, re
     axphys.xaxis.set_major_locator(ticker.MaxNLocator(4))
 
     # Plot q
-    ax[1].errorbar(radii, q, yerr=dq, marker='s', c='black', ms=3, lw=0.0, elinewidth=0.7, zorder=1, label='kinemetry')
+    ax[1].errorbar(radii, q, yerr=dq, marker='s', c='black', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1, label='kinemetry')
     if 'rad' in model_data:
-        ax[1].errorbar(model_data['rad'], model_data['q'], yerr=model_data['q_unc'], fmt='k', marker='s', mec='black', mfc='white', ms=3, lw=0.0, elinewidth=0.7, zorder=1, label='model')
+        ax[1].errorbar(model_data['rad'], model_data['q'], yerr=model_data['q_unc'], fmt='k', marker='s', mec='black', mfc='white', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1, label='model')
     if "q_med" in pos_dist:
         ax[1].fill_between(radii, pos_dist["q_med"]-pos_dist["q_std"], pos_dist["q_med"]+pos_dist["q_std"], ec=None, fc='lightgray', zorder=0)
     ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
@@ -145,13 +146,13 @@ def plot_kinemetry_profiles(k, scale, phys_scale, model_data={}, ref_pa=None, re
         ax[1].legend(loc='upper left', bbox_to_anchor=(1.17,1.0), fontsize=6)
 
     # Plot k1
-    ax[2].errorbar(radii, k1, yerr=dk1, marker='s', c='black', ms=3, lw=0.0, elinewidth=0.7, zorder=1)
+    ax[2].errorbar(radii, k1, yerr=dk1, marker='s', c='black', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
     if 'rad' in model_data:
         ax[2].errorbar(
                     model_data['rad'], 
                     model_data['v_ext']*np.sqrt(1-model_data['q']**2), 
                     yerr=np.sqrt(model_data['v_ext_unc']*(1-model_data['q']**2)+(model_data['v_ext']**2*np.abs(model_data['q']*model_data['q_unc'])**2)/(1-model_data['q']**2)), 
-                    fmt='k', marker='s', mec='black', mfc='white', ms=3, ls='-', lw=0.7, elinewidth=0.7, zorder=1
+                    fmt='k', marker='s', mec='black', mfc='white', ms=markersize, ls='-', lw=0.7, elinewidth=0.7, zorder=1
                 )
     if "k1_med" in pos_dist:
         ax[2].fill_between(radii, pos_dist["k1_med"]-pos_dist["k1_std"], pos_dist["k1_med"]+pos_dist["k1_std"], ec=None, fc='lightgray', zorder=0)
@@ -177,7 +178,7 @@ def plot_kinemetry_profiles(k, scale, phys_scale, model_data={}, ref_pa=None, re
         ax[2].legend(loc='upper left', bbox_to_anchor=(1.17,1.0), fontsize=6)
 
     # Plot k5k1
-    ax[3].errorbar(radii, k5k1, yerr=dk5k1, marker='s', c='black', ms=3, lw=0.0, elinewidth=0.7, zorder=1)
+    ax[3].errorbar(radii, k5k1, yerr=dk5k1, marker='s', c='black', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
     if "k5k1_med" in pos_dist:
         ax[3].fill_between(radii, pos_dist["k5k1_med"]-pos_dist["k5k1_std"], pos_dist["k5k1_med"]+pos_dist["k5k1_std"], ec=None, fc='lightgray', zorder=0)
     ax[3].set_xlabel('Radius (arcsec)')

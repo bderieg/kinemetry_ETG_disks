@@ -71,12 +71,6 @@ dependencies = {
         '_MANDATORY' : [(['dataloc'], "Could not perform kinemetry because no data location was specified")]
     }
 
-transitions = {
-        'a' : 'CO(1-0)',
-        'b' : 'CO(2-1)',
-        'c' : 'CO(3-2)',
-    }
-
 ##################################
 # Attempt to read parameter file #
 ##################################
@@ -96,6 +90,7 @@ if params['dataloc'][0] != "/":  # If it's not an absolute path
 if params['dataloc'][-1] != "/":
     params['dataloc'] += "/"
 params['data_filename'] = params['dataloc'] + 'mom_bin_vals.csv'
+project_code = (params['dataloc'].rstrip('/').split('/'))[-1]
 
 ###################################################
 # Fill params with default values if not explicit #
@@ -222,23 +217,18 @@ if params['calc_mass'] and (params['redshift'] is not None) and (params['distanc
     lum_trans_unc = lum_trans * np.sqrt( ( intensity_unc / intensity )**2 + ( 2*distance_unc/distance )**2 )
 
     # Convert to CO(1-0) luminosity
-    ## Get user input for line
+    ## Get line from parameter file or fail if not included
     rco = 0.0
-    print(' ')
-    print('Here\'s a list of transitions:')
-    print(' ')
-    for key in transitions:
-        print('\t'+key+" : "+transitions[key])
-    print(' ')
-    trans_select = input('Select a transition with the corresponding letter (for gas mass estimate) : ')
-    print(' ')
     ## Convert this to an R value
-    if trans_select.lower() == "a":
+    if params['linename'] == "CO10":
         rco = 1.0
-    elif trans_select.lower() == "b":
+    elif params['linename'] == "CO21":
         rco = 0.7
-    elif trans_select.lower() == "c":
+    elif params['linename'] == "CO32":
         rco = 0.49
+    else:
+        print("EXITING... : \'linename\' not a valid string")
+        exit()
     ## Convert luminosity
     lum_co10 = lum_trans / rco
     lum_co10_unc = lum_trans_unc / rco
@@ -467,17 +457,17 @@ radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec,
             "k5k1":params["plotlimsk5k1"]}
         )
 if (params['saveloc'] != 'none') and params['saveplots']:
-    plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_radial_profiles.png', dpi=1000)
+    plt.savefig(params['saveloc']+params['objname']+'_'+project_code+'_radial_profiles.png', dpi=1000)
 
 # Plot surface brightness profile
 sb_data = plotter.plot_sb_profiles(sb, intensity_to_mass, beam_area_pix, pix_to_arcsec, pix_to_parsec)
 if (params['saveloc'] != 'none') and params['saveplots']:
-    plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_sb_profile.png', dpi=1000)
+    plt.savefig(params['saveloc']+params['objname']+'_'+project_code+'_sb_profile.png', dpi=1000)
 
 # Plot v_los maps
 spatial_data = plotter.plot_vlos_maps(xbin, ybin, velbin, k)
 if (params['saveloc'] != 'none') and params['saveplots']:
-    plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_velocity_maps.png', dpi=1000)
+    plt.savefig(params['saveloc']+params['objname']+'_'+project_code+'_velocity_maps.png', dpi=1000)
     
 # Plot summary sheet
 summary = plotter.plot_summary(k, sb, sb_lin, pix_to_arcsec, pix_to_parsec, 
@@ -491,7 +481,7 @@ summary = plotter.plot_summary(k, sb, sb_lin, pix_to_arcsec, pix_to_parsec,
             "k5k1":params["plotlimsk5k1"]}
         )
 if (params['saveloc'] != 'none') and params['saveplots']:
-    plt.savefig(params['saveloc']+params['objname']+'_'+params['linename']+'_summary.png', dpi=1000)
+    plt.savefig(params['saveloc']+params['objname']+'_'+project_code+'_summary.png', dpi=1000)
 
 # If not saving figures, just show
 if not params['saveloc']:
@@ -505,8 +495,8 @@ if params['saveloc'] and not (params['saveplots'] or params['savedata']):
 
 # Save plot data
 if params['savedata']:
-    radial_data.to_csv(params['saveloc']+params['objname']+'_'+params['linename']+'_radial_data.csv', index=True)
-    spatial_data.to_csv(params['saveloc']+params['objname']+'_'+params['linename']+'_spatial_data.csv', index=False)
+    radial_data.to_csv(params['saveloc']+params['objname']+'_'+project_code+'_radial_data.csv', index=True)
+    spatial_data.to_csv(params['saveloc']+params['objname']+'_'+project_code+'_spatial_data.csv', index=False)
 
     # Save csv of kinemetry parameters
     k1 = list(radial_data['k1'])
@@ -543,7 +533,7 @@ if params['savedata']:
                 'gas mass uncertainty (M_sol)' : [mass_gas_unc]
             }
         )
-    kin_params.to_csv(params['saveloc']+params['objname']+'_'+params['linename']+'_kinemetry_parameters.csv', index=False)
+    kin_params.to_csv(params['saveloc']+params['objname']+'_'+project_code+'_kinemetry_parameters.csv', index=False)
 
     # Save also to a json with all the kinemetry parameters
     alldata = {}
