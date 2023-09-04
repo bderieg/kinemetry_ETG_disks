@@ -1,4 +1,5 @@
 import pandas as pd
+import csv
 
 # Define some constants
 prefixes = [
@@ -16,7 +17,36 @@ prefixes = [
         "WISEA"
         ]
 
-properties = pd.read_excel('/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/kinemetry_progress.ods', engine='odf', sheet_name='Target Parameters', index_col=0)
+def readp(filename):
+    """ Reads a given properties file with each line of the format key=value.  Returns a dictionary containing the pairs.
+
+    Keyword arguments:
+        filename -- the name of the file to be read
+    """
+    result = {}
+    with open(filename, "r") as csvfile:  # Open file as read-only
+        # Define file-read object
+        reader = csv.reader(csvfile, delimiter='=', escapechar='\\', quoting=csv.QUOTE_NONE)
+
+        # Iterate through rows in file
+        for row in reader:
+            row = [i.replace(" ","") for i in row]
+            if len(row) == 0:  # If blank row
+                continue
+            elif len(row) != 2:  # If row doesn't make sense
+                raise csv.Error("Parameter file syntax error on line "+str(row))
+            try:  # Convert data types except for strings
+                row[1] = eval(row[1])
+            except SyntaxError:
+                pass
+            result[row[0].lower()] = row[1]  # Assign row to dictionary
+
+    return result
+
+try:
+    properties = pd.read_excel(readp('config.param')['prop_filename'], engine='odf', sheet_name=readp('config.param')['prop_filename'], index_col=0)
+except:
+    properties = pd.read_csv(readp('config.param')['prop_filename'], index_col=0)
 
 for key,data in properties.iterrows():
     try:
