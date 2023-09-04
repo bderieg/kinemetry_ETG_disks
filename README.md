@@ -3,8 +3,8 @@
 A set of scripts using Davor Krajnovic's "kinemetry" program for Python. Specifically for doing moment 1 kinemetry on thin disks from ALMA spectral data.
 
 ## Parameter Files
-The user should create his/her own parameter files for each target (see examples folder). Parameter files should be of the format key=value (if value is a string, quotations should be placed around the it), one per line, with the following mandatory keys
-- data_filename (csv containing moment/uncertainty data)
+The user should create his/her own parameter files for each target (see examples folder). Parameter files should be of the format key=value (if value is a string, quotations should be placed around the it), one per line, with the following mandatory key
+- dataloc (folder location of 'mom_bin_vals.csv' data file output from the 'alma_moments' IDL routine)
 
 and the following optional kinemetry parameters (see documentation there)
 - ntrm
@@ -41,7 +41,7 @@ and the following other optional parameters
 - objname
     - A string with the object name; used for file naming if 'save_loc' is set
 - linename
-    - A string with the transition name; used for file naming if 'save_loc' is set (e.g., 'CO21')
+    - A string with the transition name; supported are 'CO32', 'CO21', or 'CO10'
 - plotlimspa
     - A 2-element list (square brackets) with lower/upper y-limits for plotting the PA
 - plotlimsq
@@ -56,6 +56,8 @@ and the following other optional parameters
     - If true, some kinemetry plots will be saved to the location specified by 'saveloc'
 - calc_mass
     - If true, a file is output with line intensity, luminosity, derived gas mass, etc.
+- mc
+    - If true, MC resampling is done on the kinemetry fit to obtain Bayesian uncertainties
 - savedata
     - If true, some useful data will be saved in .csv format to the location specified by 'saveloc'
 - bad_bins
@@ -71,7 +73,7 @@ With parameter files specified, kinemetry can be run with
 ```
 python3 main.py [parameter file]
 ```
-(or equivalent command with whatever python is set to). If the user just wants to run the examples, a shell script titled 'run_all.sh' has been placed in the 'examples' folder for convenience (this runs kinemetry on all the data/parameter files in the 'examples' folder). Note that the 'examples/data' folder is intentionally left empty, to be filled when the user runs these examples.
+(or equivalent command with whatever python is set to). Some examples are given in the /examples folder. To run them all, the user can run the 'run_all.sh' bash script.
 
 # Dependencies
 The following packages are required to run this application:
@@ -80,3 +82,5 @@ The following packages are required to run this application:
 - [matplotlib](https://matplotlib.org/)
 - [pandas](https://pypi.org/project/pandas/)
 - [plotbin](https://pypi.org/project/plotbin/)
+- [tqdm](https://tqdm.github.io/)
+- [astropy](https://www.astropy.org/)
