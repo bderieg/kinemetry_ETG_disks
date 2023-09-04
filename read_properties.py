@@ -16,13 +16,16 @@ prefixes = [
         "WISEA"
         ]
 
-properties = pd.read_csv('/home/ben/Desktop/research/research_boizelle_working/ap_phot_data/galaxy_properties.csv', index_col=0)
+properties = pd.read_excel('/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/kinemetry_progress.ods', engine='odf', sheet_name='Target Parameters', index_col=0)
 
 for key,data in properties.iterrows():
-    if any([True if p in key else False for p in prefixes]):
-        newname = key.split('(', 1)[0]  # Remove parentheses
-        newname = newname.replace(' ','')  # Remove spaces
-        properties.rename(index={key:newname}, inplace=True)
+    try:
+        if any([True if p in key else False for p in prefixes]):
+            newname = key.split('(', 1)[0]  # Remove parentheses
+            newname = newname.replace(' ','')  # Remove spaces
+            properties.rename(index={key:newname}, inplace=True)
+    except TypeError:
+        pass
 
 def get_prop(target, prop):
     return properties.loc[target][prop]

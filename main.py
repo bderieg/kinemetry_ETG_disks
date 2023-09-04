@@ -28,6 +28,7 @@ import logging
 ###########################
 # Define global constants #
 ###########################
+
 default_params = {
         'dataloc' : None,
         'ntrm' : 6,
@@ -130,9 +131,9 @@ for item in dependencies['_MANDATORY']:
 # Add in spreadsheet parameters #
 #################################
 
-params['distance'] = rp.get_prop(params['objname'],'D_L (Mpc)')
-params['distance_unc'] = rp.get_prop(params['objname'],'D_L Unc.')
-params['redshift'] = rp.get_prop(params['objname'],'Redshift (via NED)')
+params['distance'] = rp.get_prop(params['objname'],'luminosity distance (Mpc)')
+params['distance_unc'] = rp.get_prop(params['objname'],'luminosity distance unc. (Mpc)')
+params['redshift'] = rp.get_prop(params['objname'],'NED redshift')
 moment_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/moment_pa_data.json'))
 iso_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/isophote_pa_data.json'))
 if params['objname'] in moment_pa_data:
