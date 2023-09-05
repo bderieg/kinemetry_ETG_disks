@@ -68,6 +68,9 @@ See the existing parameter files as examples.
 ### A note on file names
 For any of the keywords which specifies a filename, either an absolute path (starting with a "/") or a relative path from the location of the parameter file can be given.
 
+## Config file and target properties file
+There is a file in the main directory called 'config.param' which should have one or two entries in the same format as the other parameter files. The first entry is 'prop_filename.' This is the [string] name of a .csv or .ods file where the first column is a list of target names, and there are at least the following other columns titled exactly: 'luminosity distance (Mpc)', 'luminosity distance unc. (Mpc)', 'NED redshift' (hopefully these are self-explanatory as far as what data they should contain). If an .ods file is specified, a 'sheet_name' should also be specified for the corresponding sheet in the spreadsheet.
+
 ## Running Kinemetry
 With parameter files specified, kinemetry can be run with
 ```
