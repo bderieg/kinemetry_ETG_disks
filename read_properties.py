@@ -30,7 +30,6 @@ def readp(filename):
 
         # Iterate through rows in file
         for row in reader:
-            row = [i.replace(" ","") for i in row]
             if len(row) == 0:  # If blank row
                 continue
             elif len(row) != 2:  # If row doesn't make sense
@@ -44,7 +43,7 @@ def readp(filename):
     return result
 
 try:
-    properties = pd.read_excel(readp('config.param')['prop_filename'], engine='odf', sheet_name=readp('config.param')['prop_filename'], index_col=0)
+    properties = pd.read_excel(readp('config.param')['prop_filename'], engine='odf', sheet_name=readp('config.param')['sheet_name'], index_col=0)
 except:
     properties = pd.read_csv(readp('config.param')['prop_filename'], index_col=0)
 

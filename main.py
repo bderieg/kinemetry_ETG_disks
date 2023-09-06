@@ -166,7 +166,7 @@ targetsn = moment_data_full.iloc[6,0]
 targetsn = float(targetsn[targetsn.find(":")+1:])
 
 pix_to_arcsec = pix_scale * 3600
-pix_to_parsec = pix_to_arcsec * params['distance']*u.Mpc.to(u.pc) * np.pi / 180 / 3600
+pix_to_parsec = pix_to_arcsec * rp.get_prop(params['objname'],'angular scale (pc/arcsec)')
 
 beam_area_pix = 1.1331 * bmaj * bmin / pix_scale**2
 beam_area_arcsec = 1.1331 * bmaj * bmin * 3600**2
@@ -543,7 +543,8 @@ if params['savedata']:
     except FileNotFoundError:
         print(' ')
         print("kinemetry parameters file not found . . . creating a new one here")
-    alldata[params['objname']] = {
+    alldata[params['objname']+'_'+project_code+'_'+params['linename']] = {
+                'disk radius (pc)' : k.rad[-1]*pix_to_parsec,
                 'range k1 (km/s)' : max(k1)-min(k1),
                 'range k1 uncertainty (km/s)' : np.sqrt( dk1[np.argmax(k1)]**2 + dk1[np.argmin(k1)]**2 ),
                 'max k1 (km/s)' : max(k1),
@@ -562,8 +563,8 @@ if params['savedata']:
                 'inclination uncertainty (deg)' : dq[np.argmin(min(q))],
                 'intensity (Jy km/s)' : intensity,
                 'intensity uncertainty (Jy km/s)' : intensity_unc,
-                'luminosity (K km/s pc^2)' : lum_trans,
-                'luminosity uncertainty (K km/s pc^2)' : lum_trans_unc,
+                'luminosity (K km s^-1 pc^2)' : lum_trans,
+                'luminosity uncertainty (K km s^-1 pc^2)' : lum_trans_unc,
                 'gas mass (M_sol)' : mass_gas,
                 'gas mass uncertainty (M_sol)' : mass_gas_unc
             }
