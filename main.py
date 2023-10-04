@@ -134,6 +134,10 @@ for item in dependencies['_MANDATORY']:
 params['distance'] = rp.get_prop(params['objname'],'luminosity distance (Mpc)')
 params['distance_unc'] = rp.get_prop(params['objname'],'luminosity distance unc. (Mpc)')
 params['redshift'] = rp.get_prop(params['objname'],'NED redshift')
+if type(params['distance']) is not np.float64:
+    params['distance'] = (params['distance'])[0]
+    params['distance_unc'] = (params['distance_unc'])[0]
+    params['redshift'] = (params['redshift'])[0]
 moment_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/moment_pa_data.json'))
 iso_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/isophote_pa_data.json'))
 if params['objname'] in moment_pa_data:
@@ -166,7 +170,10 @@ targetsn = moment_data_full.iloc[6,0]
 targetsn = float(targetsn[targetsn.find(":")+1:])
 
 pix_to_arcsec = pix_scale * 3600
-pix_to_parsec = pix_to_arcsec * rp.get_prop(params['objname'],'angular scale (pc/arcsec)')
+angular_scale = rp.get_prop(params['objname'],'angular scale (pc/arcsec)')
+if type(angular_scale) is not np.float64:
+    angular_scale = angular_scale[0]
+pix_to_parsec = pix_to_arcsec * angular_scale
 
 beam_area_pix = 1.1331 * bmaj * bmin / pix_scale**2
 beam_area_arcsec = 1.1331 * bmaj * bmin * 3600**2
