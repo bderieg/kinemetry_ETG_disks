@@ -9,6 +9,7 @@ from plotbin.plot_velfield import plot_velfield
 import pandas as pd
 import scipy.interpolate as interp
 from scipy.spatial import ConvexHull
+import scipy.stats as scpst
 import astropy.units as u
 import json
 from tqdm.auto import tqdm
@@ -134,10 +135,12 @@ for item in dependencies['_MANDATORY']:
 params['distance'] = rp.get_prop(params['objname'],'luminosity distance (Mpc)')
 params['distance_unc'] = rp.get_prop(params['objname'],'luminosity distance unc. (Mpc)')
 params['redshift'] = rp.get_prop(params['objname'],'NED redshift')
+params['r_g'] = rp.get_prop(params['objname'],'SMBH radius of influence (pc)')
 if type(params['distance']) is not np.float64:
     params['distance'] = (params['distance'])[0]
     params['distance_unc'] = (params['distance_unc'])[0]
     params['redshift'] = (params['redshift'])[0]
+    params['r_g'] = (params['r_g'])[0]
 moment_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/moment_pa_data.json'))
 iso_pa_data = json.load(open('/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/isophote_pa_data.json'))
 if params['objname'] in moment_pa_data:
@@ -429,6 +432,20 @@ sb_lin = kin.kinemetry(xbin=xbin, ybin=ybin, moment=fluxbin, error=fluxbin_unc,
         x0=fx0, y0=fy0, fixcen=True,
         plot=False, verbose=False)
 
+# Calculate mass enclosed by r_g
+imc = {}  # A dictionary to contain everything for this calculation
+imc['total_mass'] = intensity * intensity_to_mass
+imc['total_sb'] = sum(sb.cf[:,0])
+imc['rad_pc'] = sb.rad * pix_to_parsec
+imc['sb'] = sb.cf[:,0]
+imc['threshold'] = params['r_g']
+imc['uplim'] = False
+beamrpc = scpst.gmean([bmaj,bmin])/pix_scale*pix_to_parsec
+if beamrpc > params['r_g']:
+    imc['uplim'] = True
+    imc['threshold'] = beamrpc
+imc['enc_mass'] = imc['total_mass'] * sum([ff for ff,pc in zip(imc['sb'],imc['rad_pc']) if pc <= imc['threshold']]) / sum(imc['sb'])
+
 #######################################
 # Get kinemetry from model parameters #
 #######################################
@@ -573,7 +590,9 @@ if params['savedata']:
                 'luminosity (K km s^-1 pc^2)' : lum_trans,
                 'luminosity uncertainty (K km s^-1 pc^2)' : lum_trans_unc,
                 'gas mass (M_sol)' : mass_gas,
-                'gas mass uncertainty (M_sol)' : mass_gas_unc
+                'gas mass uncertainty (M_sol)' : mass_gas_unc,
+                'r_g enclosed mass (M_sol)' : imc['enc_mass'],
+                'r_g uplim' : imc['uplim']
             }
     kp_outfile = open(params['saveloc']+'all_parameters.json', 'w')
     json.dump(alldata, kp_outfile, indent=5)
