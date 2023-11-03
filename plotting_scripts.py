@@ -91,16 +91,16 @@ def plot_kinemetry_profiles(k, scale, phys_scale, m_bh=0.0, model_data={}, ref_p
     if 'rad' in model_data:
         plot_lims = {
                 "pa" : [
-                        min(min(pa)-0.1*(max(pa)-min(pa)), min(model_data['pa'])-0.1*(max(model_data['pa'])-min(model_data['pa']))), 
-                        max(max(pa)+0.1*(max(pa)-min(pa)), max(model_data['pa'])+0.1*(max(model_data['pa'])-min(model_data['pa'])))
+                        min(min(pa)-0.1*(max(pa)-min(pa)), min(model_data.loc[:,'pa'])-0.1*(max(model_data.loc[:,'pa'])-min(model_data.loc[:,'pa']))), 
+                        max(max(pa)+0.1*(max(pa)-min(pa)), max(model_data.loc[:,'pa'])+0.1*(max(model_data.loc[:,'pa'])-min(model_data.loc[:,'pa'])))
                     ],
                 "q" : [
-                        min(min(q)-0.1*(max(q)-min(q)), min(model_data['q'])-0.1*(max(model_data['q'])-min(model_data['q']))),
-                        max(max(q)+0.1*(max(q)-min(q)), max(model_data['q'])+0.1*(max(model_data['q'])-min(model_data['q'])))
+                        min(min(q)-0.1*(max(q)-min(q)), min(model_data.loc[:,'q'])-0.1*(max(model_data.loc[:,'q'])-min(model_data.loc[:,'q']))),
+                        max(max(q)+0.1*(max(q)-min(q)), max(model_data.loc[:,'q'])+0.1*(max(model_data.loc[:,'q'])-min(model_data.loc[:,'q'])))
                     ],
                 "k1" : [
-                        min(min(k1)-0.1*(max(k1)-min(k1)), min(model_data['v_ext'])-0.1*(max(model_data['v_ext'])-min(model_data['v_ext']))),
-                        max(max(k1)+0.3*(max(k1)-min(k1)), max(model_data['v_ext'])+0.3*(max(model_data['v_ext'])-min(model_data['v_ext'])))
+                        min(min(k1)-0.1*(max(k1)-min(k1)), min(model_data.loc[:,'v_ext'])-0.1*(max(model_data.loc[:,'v_ext'])-min(model_data.loc[:,'v_ext']))),
+                        max(max(k1)+0.3*(max(k1)-min(k1)), max(model_data.loc[:,'v_ext'])+0.3*(max(model_data.loc[:,'v_ext'])-min(model_data.loc[:,'v_ext'])))
                     ],
                 "k5k1" : [0.00, 0.04]
                 }
@@ -111,8 +111,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, m_bh=0.0, model_data={}, ref_p
 
     # Plot pa
     ax[0].errorbar(radii, pa, yerr=dpa, marker='s', c='black', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
-    if 'rad' in model_data:
-        ax[0].errorbar(model_data['rad'], model_data['pa'], yerr=model_data['pa_unc'], fmt='k', marker='s', mec='black', mfc='white', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
+    if 'pa' in model_data:
+        ax[0].errorbar(model_data.loc[:,'radius'], model_data.loc[:,'pa'], yerr=model_data.loc[:,'pa_unc'], fmt='k', marker='s', mec='black', mfc='white', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
     if "pa_med" in pos_dist:
         ax[0].fill_between(radii, pos_dist["pa_med"]-pos_dist["pa_std"], pos_dist["pa_med"]+pos_dist["pa_std"], ec=None, fc='lightgray', zorder=0)
     ax[0].set_ylabel('$\Gamma$ (deg)', rotation='horizontal', ha='right')
@@ -132,8 +132,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, m_bh=0.0, model_data={}, ref_p
 
     # Plot q
     ax[1].errorbar(radii, q, yerr=dq, marker='s', c='black', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1, label='kinemetry')
-    if 'rad' in model_data:
-        ax[1].errorbar(model_data['rad'], model_data['q'], yerr=model_data['q_unc'], fmt='k', marker='s', mec='black', mfc='white', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1, label='model')
+    if 'q' in model_data:
+        ax[1].errorbar(model_data.loc[:,'radius'], model_data.loc[:,'q'], yerr=model_data.loc[:,'q_unc'], fmt='k', marker='s', mec='black', mfc='white', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1, label='model')
     if "q_med" in pos_dist:
         ax[1].fill_between(radii, pos_dist["q_med"]-pos_dist["q_std"], pos_dist["q_med"]+pos_dist["q_std"], ec=None, fc='lightgray', zorder=0)
     ax[1].set_ylabel('$q$', rotation='horizontal', ha='left')
@@ -142,16 +142,16 @@ def plot_kinemetry_profiles(k, scale, phys_scale, m_bh=0.0, model_data={}, ref_p
     ax[1].set_ylim(plot_lims["q"])
     ax[1].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[1].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
-    if 'rad' in model_data:
+    if 'q' in model_data:
         ax[1].legend(loc='upper left', bbox_to_anchor=(1.17,1.0), fontsize=6)
 
     # Plot k1
     ax[2].errorbar(radii, k1, yerr=dk1, marker='s', c='black', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
-    if 'rad' in model_data:
+    if 'v_ext' in model_data:
         ax[2].errorbar(
-                    model_data['rad'], 
-                    model_data['v_ext']*np.sqrt(1-model_data['q']**2), 
-                    yerr=np.sqrt(model_data['v_ext_unc']*(1-model_data['q']**2)+(model_data['v_ext']**2*np.abs(model_data['q']*model_data['q_unc'])**2)/(1-model_data['q']**2)), 
+                    model_data.loc[:,'radius'], 
+                    model_data.loc[:,'v_ext']*np.sqrt(1-model_data.loc[:,'q']**2), 
+                    yerr=np.sqrt(model_data.loc[:,'v_ext_unc']*(1-model_data.loc[:,'q']**2)+(model_data.loc[:,'v_ext']**2*np.abs(model_data.loc[:,'q']*model_data.loc[:,'q_unc'])**2)/(1-model_data.loc[:,'q']**2)), 
                     fmt='k', marker='s', mec='black', mfc='white', ms=markersize, ls='-', lw=0.7, elinewidth=0.7, zorder=1
                 )
     if "k1_med" in pos_dist:
@@ -162,10 +162,10 @@ def plot_kinemetry_profiles(k, scale, phys_scale, m_bh=0.0, model_data={}, ref_p
     ax[2].set_ylim(plot_lims["k1"])
     ax[2].xaxis.set_minor_locator(ticker.AutoMinorLocator(5))
     ax[2].yaxis.set_minor_locator(ticker.AutoMinorLocator(5))
-    if 'rad' in model_data:
+    if 'v_ext' in model_data:
         ## Interpolate v_ext,q values
-        q_interp = spint.interp1d(model_data['rad'], model_data['q'], fill_value='extrapolate')
-        vext_interp = spint.interp1d(model_data['rad'], model_data['v_ext'], fill_value='extrapolate')
+        q_interp = spint.interp1d(model_data.loc[:,'radius'], model_data.loc[:,'q'], fill_value='extrapolate')
+        vext_interp = spint.interp1d(model_data.loc[:,'radius'], model_data.loc[:,'v_ext'], fill_value='extrapolate')
         ## Get BH curve
         G = 4.3009e-3
         finerad = np.arange(0.0, 10.0, 0.01)
@@ -174,6 +174,17 @@ def plot_kinemetry_profiles(k, scale, phys_scale, m_bh=0.0, model_data={}, ref_p
         ax[2].plot(finerad, v_bh*np.sqrt(1-q_interp(finerad)**2), ls=':', c='black', label='$v_{BH}$', lw=0.7)
         ax[2].plot(finerad, vext_interp(finerad)*np.sqrt(1-q_interp(finerad)**2), ls='--', lw=0.7, c='black', zorder=-2, label='$v_{ext}$')
         ax[2].plot(finerad, np.sqrt(G*m_bh/(finerad/scale*phys_scale)+vext_interp(finerad)**2)*np.sqrt(1-q_interp(finerad)**2), ls='-', lw=0.7, c='black', zorder=-3, label='$v_{BH+ext}$')
+        ax[2].legend(loc='upper left', bbox_to_anchor=(1.17,1.0), fontsize=6)
+    if 'v_c' in model_data:
+        ## Interpolate q values
+        q_interp = spint.interp1d(model_data.loc[:,'radius'], model_data.loc[:,'q'], fill_value='extrapolate')
+        ## Get BH curve
+        G = 4.3009e-3
+        finerad = np.arange(0.0, 10.0, 0.01)
+        v_bh = np.sqrt(G*m_bh/(finerad/scale*phys_scale))
+        ## Plot everything
+        ax[2].plot(finerad, v_bh*np.sqrt(1-q_interp(finerad)**2), ls=':', c='black', label='$v_{BH}$', lw=0.7)
+        ax[2].errorbar(model_data.loc[:,'radius'], model_data.loc[:,'v_c'], fmt='k', marker='s', mec='black', mfc='white', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
         ax[2].legend(loc='upper left', bbox_to_anchor=(1.17,1.0), fontsize=6)
 
     # Plot k5k1
