@@ -50,6 +50,7 @@ default_params = {
         'nq' : 40,
         'npa' : 40,
         'vsys' : None,
+        'm_bh' : 0.0,
         'drad' : 1,
         'extrap_pixels' : 0.0,
         'incrad' : 1,
@@ -472,6 +473,7 @@ except:
 
 # Plot radial profiles
 radial_data = plotter.plot_kinemetry_profiles(k, pix_to_arcsec, pix_to_parsec, 
+        m_bh=params['m_bh'],
         model_data=model_data,
         ref_pa=params['ref_pa'], ref_q=params['ref_q'], 
         beam_size=beam_area_arcsec, pos_dist=pos_dist,

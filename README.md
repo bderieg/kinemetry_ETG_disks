@@ -38,6 +38,8 @@ and the following other optional parameters
     - Velocity values that spatially correspond to flux values below this level will be thrown out before running kinemetry
 - extrap_pixels
     - When interpolating, how far outside the data (in pixels) should be extrapolated?
+- m_bh
+    - SMBH mass for plotting velocity curve over radial profiles
 - objname
     - A string with the object name; used for file naming if 'save_loc' is set
 - linename
