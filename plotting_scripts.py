@@ -175,17 +175,8 @@ def plot_kinemetry_profiles(k, scale, phys_scale, m_bh=0.0, model_data={}, ref_p
         ax[2].plot(finerad, vext_interp(finerad)*np.sqrt(1-q_interp(finerad)**2), ls='--', lw=0.7, c='black', zorder=-2, label='$v_{ext}$')
         ax[2].plot(finerad, np.sqrt(G*m_bh/(finerad/scale*phys_scale)+vext_interp(finerad)**2)*np.sqrt(1-q_interp(finerad)**2), ls='-', lw=0.7, c='black', zorder=-3, label='$v_{BH+ext}$')
         ax[2].legend(loc='upper left', bbox_to_anchor=(1.17,1.0), fontsize=6)
-    if 'v_c' in model_data:
-        ## Interpolate q values
-        q_interp = spint.interp1d(model_data.loc[:,'radius'], model_data.loc[:,'q'], fill_value='extrapolate')
-        ## Get BH curve
-        G = 4.3009e-3
-        finerad = np.arange(0.0, 10.0, 0.01)
-        v_bh = np.sqrt(G*m_bh/(finerad/scale*phys_scale))
-        ## Plot everything
-        ax[2].plot(finerad, v_bh*np.sqrt(1-q_interp(finerad)**2), ls=':', c='black', label='$v_{BH}$', lw=0.7)
+    elif 'v_c' in model_data:
         ax[2].errorbar(model_data.loc[:,'radius'], model_data.loc[:,'v_c'], fmt='k', marker='s', mec='black', mfc='white', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
-        ax[2].legend(loc='upper left', bbox_to_anchor=(1.17,1.0), fontsize=6)
 
     # Plot k5k1
     ax[3].errorbar(radii, k5k1, yerr=dk5k1, marker='s', c='black', ms=markersize, lw=0.0, elinewidth=0.7, zorder=1)
