@@ -79,13 +79,3 @@ With parameter files specified, kinemetry can be run with
 python3 main.py [parameter file]
 ```
 (or equivalent command with whatever python is set to). Some examples are given in the /examples folder. To run kinemetry on all parameter files in some directory, use the 'run_all.sh' script with the parameter file folder as the first argument.
-
-# Dependencies
-The following packages are required to run this application:
-- [numpy](https://numpy.org/)
-- [scipy](https://scipy.org/)
-- [matplotlib](https://matplotlib.org/)
-- [pandas](https://pypi.org/project/pandas/)
-- [plotbin](https://pypi.org/project/plotbin/)
-- [tqdm](https://tqdm.github.io/)
-- [astropy](https://www.astropy.org/)
