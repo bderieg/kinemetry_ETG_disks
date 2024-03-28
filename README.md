@@ -78,7 +78,7 @@ With parameter files specified, kinemetry can be run with
 ```
 python3 main.py [parameter file]
 ```
-(or equivalent command with whatever python is set to). Some examples are given in the /examples folder. To run them all, the user can run the 'run_all.sh' bash script.
+(or equivalent command with whatever python is set to). Some examples are given in the /examples folder. To run kinemetry on all parameter files in some directory, use the 'run_all.sh' script with the parameter file folder as the first argument.
 
 # Dependencies
 The following packages are required to run this application:
