@@ -451,7 +451,7 @@ imc['enc_mass'] = imc['total_mass'] * sum([ff for ff,pc in zip(imc['sb'],imc['ra
 # Get kinemetry from model parameters #
 #######################################
 
-model_data = {}
+model_results = {}
 try:
     model_results = pd.read_csv(params['dataloc']+'model_results.csv')
     # model_data['rad'] = np.array(list(model_results.loc[:,'radius']))
@@ -537,17 +537,21 @@ if params['savedata']:
     dk5k1 = list(radial_data['dk5k1'])
     kin_params = pd.DataFrame(
             {
+                'disk radius (pc)' : k.rad[-1]*pix_to_parsec,
                 'range k1 (km/s)' : [max(k1)-min(k1)],
                 'range k1 uncertainty (km/s)' : [ np.sqrt( dk1[np.argmax(k1)]**2 + dk1[np.argmin(k1)]**2 ) ],
                 'max k1 (km/s)' : [max(k1)],
                 'max k1 uncertainty (km/s)' : [dk1[np.argmax(k1)]],
                 'average k5k1' : [np.mean(k5k1)],
+                'median k5k1' : [np.median(k5k1)],
                 'average k5k1 uncertainty' : [ np.sqrt(sum( [ kk**2 for kk in k5k1 ] )) ],
                 'average pa (deg)' : [np.mean(pa)],
+                'median pa (deg)' : [np.median(pa)],
                 'average pa uncertainty (deg)' : [ np.sqrt(sum( [ p**2 for p in pa ] )) ],
                 'range pa (deg)' : [max(pa)-min(pa)],
                 'range pa uncertainty (deg)' : [ np.sqrt( dpa[np.argmax(pa)]**2 + dpa[np.argmin(pa)]**2 ) ],
                 'average q' : [np.mean(q)],
+                'median q' : [np.median(q)],
                 'average q uncertainty' : [ np.sqrt(sum( [ qq**2 for qq in q ] )) ],
                 'range q' : [max(q)-min(q)],
                 'range q uncertainty' : [ np.sqrt( dq[np.argmax(q)]**2 + dq[np.argmin(q)]**2 ) ],
@@ -558,7 +562,11 @@ if params['savedata']:
                 'luminosity (K km/s pc^2)' : [lum_trans],
                 'luminosity uncertainty (K km/s pc^2)' : [lum_trans_unc],
                 'gas mass (M_sol)' : [mass_gas],
-                'gas mass uncertainty (M_sol)' : [mass_gas_unc]
+                'gas mass uncertainty (M_sol)' : [mass_gas_unc],
+                'r_g enclosed mass (M_sol)' : imc['enc_mass'],
+                'r_g uplim' : imc['uplim'],
+                'rad' : [sb.rad*pix_to_parsec],
+                'density_profile' : [sb.cf[:,0]*intensity_to_mass*beam_area_pix**2/sb.q/(np.pi*(sb.rad[-1]*pix_to_parsec)**2)]
             }
         )
     kin_params.to_csv(params['saveloc']+params['objname']+'_'+project_code+'_kinemetry_parameters.csv', index=False)
@@ -577,12 +585,15 @@ if params['savedata']:
                 'max k1 (km/s)' : max(k1),
                 'max k1 uncertainty (km/s)' : dk1[np.argmax(k1)],
                 'average k5k1' : np.mean(k5k1),
+                'median k5k1' : np.median(k5k1),
                 'average k5k1 uncertainty' : np.sqrt(sum( [ kk**2 for kk in k5k1 ] )),
                 'average pa (deg)' : np.mean(pa),
+                'median pa (deg)' : np.median(pa),
                 'average pa uncertainty (deg)' : np.sqrt(sum( [ p**2 for p in pa ] )),
                 'range pa (deg)' : max(pa)-min(pa),
                 'range pa uncertainty (deg)' : np.sqrt( dpa[np.argmax(pa)]**2 + dpa[np.argmin(pa)]**2 ),
                 'average q' : np.mean(q),
+                'median q' : np.median(q),
                 'average q uncertainty' : np.sqrt(sum( [ qq**2 for qq in q ] )),
                 'range q' : max(q)-min(q),
                 'range q uncertainty' : np.sqrt( dq[np.argmax(q)]**2 + dq[np.argmin(q)]**2 ),
@@ -595,7 +606,8 @@ if params['savedata']:
                 'gas mass (M_sol)' : mass_gas,
                 'gas mass uncertainty (M_sol)' : mass_gas_unc,
                 'r_g enclosed mass (M_sol)' : imc['enc_mass'],
-                'r_g uplim' : imc['uplim']
+                'r_g uplim' : imc['uplim'],
+                'density_profile' : dict(zip(sb.rad*pix_to_parsec,sb.cf[:,0]*intensity_to_mass*beam_area_pix**2/sb.q/(np.pi*(sb.rad[-1]*pix_to_parsec)**2)))
             }
     kp_outfile = open(params['saveloc']+'all_parameters.json', 'w')
     json.dump(alldata, kp_outfile, indent=5)

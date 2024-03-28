@@ -551,6 +551,7 @@ def plot_sb_profiles(k, intensity_to_mass, beam_area_pix, scale, phys_scale):
     axdensity.set_box_aspect(1.0)
     axdensity.set_ylabel('$\log_{10}$ $\Sigma\'_{\\mathrm{gas}}$ (M$_\\odot$ pc$^{-2}$)')
     axdensity.set_yscale('log')
+    axdensity.set_ylim([i*intensity_to_mass*beam_area_pix/(np.pi*(radii[-1]/scale*phys_scale)**2)/np.median(k.q) for i in ax.get_ylim()])
     axdensity.autoscale()
     axdensity.yaxis.set_major_locator(ticker.LogLocator(base=10))
     axdensity.yaxis.set_minor_formatter(lambda y,pos : None)
