@@ -1,2 +1,2 @@
-prop_filename='/home/ben/Desktop/research/research_boizelle_working/kinemetry_working/kinemetry_progress.ods'
+prop_filename='./examples/kinemetry_progress.ods'
 sheet_name='Target Parameters'

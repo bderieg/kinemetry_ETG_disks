@@ -1,0 +1,17 @@
+dataloc=../data/ngc5208
+ring=3.1
+center_method='fc'
+rangeq=[0.01,0.3]
+rangepa=[160,170]
+drad=3.9
+plot=False
+verbose=True
+snr_cutoff=3.0
+cover=0.5
+objname='NGC5208'
+linename='CO21'
+saveloc=../
+saveplots=True
+savedata=True
+calc_mass=True
+mc=False

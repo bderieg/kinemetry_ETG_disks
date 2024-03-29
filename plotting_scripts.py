@@ -453,9 +453,9 @@ def plot_summary(k, ksb, ksb_lin, scale, phys_scale, dataloc,
     pvdmap = np.flipud(fits.open(dataloc+'pvd.fits')[0].data)
     pvdhdr = fits.open(dataloc+'pvd.fits')[0].header
     posref = pvdhdr['CRPIX1']
-    delpos = pvdhdr['CRDELT1']
+    delpos = pvdhdr['CDELT1']
     velref = pvdhdr['CRPIX2']
-    delvel = pvdhdr['CRDELT2']
+    delvel = pvdhdr['CDELT2']
     hist_ax[1].xaxis.set_major_formatter(lambda x,pos : round((x-posref)*delpos*3600))
     hist_ax[1].yaxis.set_major_formatter(lambda x,pos : -int((x-velref)*delvel))
     hist_ax[1].xaxis.set_major_locator(ticker.MaxNLocator(3))

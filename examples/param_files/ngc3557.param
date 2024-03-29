@@ -1,0 +1,17 @@
+dataloc=../data/ngc3557
+ring=0.0
+center_method='fc'
+rangeq=[0.55,0.95]
+rangepa=[5,40]
+drad=1.0
+plot=False
+verbose=True
+snr_cutoff=3.0
+cover=0.5
+objname='NGC3557'
+linename='CO21'
+saveloc=../
+saveplots=True
+savedata=True
+calc_mass=True
+mc=False
