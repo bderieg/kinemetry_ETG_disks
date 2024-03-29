@@ -18,11 +18,11 @@ prefixes = [
         ]
 
 def readp(filename):
-    """ Reads a given properties file with each line of the format key=value.  Returns a dictionary containing the pairs.
+    # Reads a given properties file with each line of the format key=value.  Returns a dictionary containing the pairs.
+    # 
+    # Keyword arguments:
+    #     filename -- the name of the file to be read
 
-    Keyword arguments:
-        filename -- the name of the file to be read
-    """
     result = {}
     with open(filename, "r") as csvfile:  # Open file as read-only
         # Define file-read object
