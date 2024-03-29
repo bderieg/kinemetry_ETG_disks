@@ -454,17 +454,6 @@ imc['enc_mass'] = imc['total_mass'] * sum([ff for ff,pc in zip(imc['sb'],imc['ra
 model_results = {}
 try:
     model_results = pd.read_csv(params['dataloc']+'model_results.csv')
-    # model_data['rad'] = np.array(list(model_results.loc[:,'radius']))
-    # model_data['pa'] = np.array(list(model_results.loc[:,'pa']))
-    # model_data['pa_unc'] = np.array(list(model_results.loc[:,'pa_unc']))
-    # model_data['q'] = np.array(list(model_results.loc[:,'q']))
-    # model_data['q_unc'] = np.array(list(model_results.loc[:,'q_unc']))
-    # model_data['v_ext'] = np.array(list(model_results.loc[:,'v_ext']))
-    # model_data['v_ext_unc'] = np.array(list(model_results.loc[:,'v_ext_unc']))
-    # model_data['v_c'] = np.array(list(model_results.loc[:,'v_c']))
-    # model_data['paq'] = np.transpose(np.array([list(model_results.loc[:,'pa']),list(model_results.loc[:,'q'])])).flatten()
-    # model_kin = kin.kinemetry(xbin=xbin, ybin=ybin, moment=velbin, error=velbin_unc,
-    #         radius=model_rad, paq=model_paq, x0=params['x0'], y0=params['y0'], plot=False, verbose=False)
 except:
     pass
 
